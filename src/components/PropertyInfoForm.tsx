@@ -23,7 +23,8 @@ export default function PropertyInfoForm({
 
   const addTaxDec = () => {
     if (localTaxDec.trim()) {
-      onChange({ ...data, taxDeclarations: [...data.taxDeclarations, localTaxDec] });
+      const cleaned = data.taxDeclarations.filter(td => td.trim());
+      onChange({ ...data, taxDeclarations: [...cleaned, localTaxDec.trim()] });
       setLocalTaxDec('');
     }
   };
@@ -41,8 +42,8 @@ export default function PropertyInfoForm({
     });
   };
 
-  const isValid = data.ownerName.trim() !== '' && data.taxDeclarations.length > 0 &&
-    data.taxDeclarations.some((td) => td.trim() !== '') && data.barangay !== '';
+  const validTaxDecs = data.taxDeclarations.filter(td => td.trim());
+  const isValid = data.ownerName.trim() !== '' && validTaxDecs.length > 0 && data.barangay !== '';
 
   return (
     <div>
@@ -82,7 +83,7 @@ export default function PropertyInfoForm({
         </div>
 
         {/* Tax Declaration Table */}
-        {data.taxDeclarations.length > 0 && (
+        {validTaxDecs.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -93,21 +94,21 @@ export default function PropertyInfoForm({
                 </tr>
               </thead>
               <tbody>
-                {data.taxDeclarations.map((td, i) => (
+                {validTaxDecs.map((td, i) => (
                   <tr key={i} className="border-b border-gray-200">
                     <td className="p-2.5 text-sm text-gray-400 text-center">{i + 1}</td>
                     <td className="p-2.5">
                       <input
                         type="text"
                         value={td}
-                        onChange={(e) => updateTaxDec(i, e.target.value)}
+                        onChange={(e) => updateTaxDec(data.taxDeclarations.indexOf(td), e.target.value)}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#1a3c6e] focus:border-[#1a3c6e]"
                         placeholder="Enter tax declaration number"
                       />
                     </td>
                     <td className="p-2.5 text-center">
                       <button
-                        onClick={() => removeTaxDec(i)}
+                        onClick={() => removeTaxDec(data.taxDeclarations.indexOf(td))}
                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                       >
                         Remove
