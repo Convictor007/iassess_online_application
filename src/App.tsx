@@ -32,7 +32,7 @@ const INITIAL_DATA: ApplicationData = {
   certificationSelections: [],
   propertyInfo: {
     ownerName: '',
-    taxDeclarations: [''],
+    taxDeclarations: [],
     titleNo: '',
     lotNo: '',
     blockNo: '',

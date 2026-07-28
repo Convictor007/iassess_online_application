@@ -102,7 +102,7 @@ export default function PropertyInfoForm({
                         value={td}
                         onChange={(e) => updateTaxDec(i, e.target.value)}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#1a3c6e] focus:border-[#1a3c6e]"
-                        placeholder="--"
+                        placeholder="Enter tax declaration number"
                       />
                     </td>
                     <td className="p-2.5 text-center">
@@ -117,9 +117,9 @@ export default function PropertyInfoForm({
                 ))
               ) : (
                 <tr>
-                  <td className="p-2.5 text-sm text-gray-400 text-center">-</td>
-                  <td className="p-2.5 text-sm text-gray-400">--</td>
-                  <td className="p-2.5 text-sm text-gray-400 text-center">--</td>
+                  <td colSpan={3} className="p-4 text-sm text-gray-400 text-center italic">
+                    No tax declarations added yet. Use the field above to add one.
+                  </td>
                 </tr>
               )}
             </tbody>
