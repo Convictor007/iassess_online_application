@@ -82,18 +82,18 @@ export default function PropertyInfoForm({
         </div>
 
         {/* Tax Declaration Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gradient-to-r from-teal-400 to-cyan-400">
-                <th className="p-2.5 text-sm font-bold text-white w-10">#</th>
-                <th className="p-2.5 text-sm font-bold text-white">Tax Declaration No.</th>
-                <th className="p-2.5 text-sm font-bold text-white text-center w-20">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.taxDeclarations.length > 0 ? (
-                data.taxDeclarations.map((td, i) => (
+        {data.taxDeclarations.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gradient-to-r from-teal-400 to-cyan-400">
+                  <th className="p-2.5 text-sm font-bold text-white w-10">#</th>
+                  <th className="p-2.5 text-sm font-bold text-white">Tax Declaration No.</th>
+                  <th className="p-2.5 text-sm font-bold text-white text-center w-20">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.taxDeclarations.map((td, i) => (
                   <tr key={i} className="border-b border-gray-200">
                     <td className="p-2.5 text-sm text-gray-400 text-center">{i + 1}</td>
                     <td className="p-2.5">
@@ -114,17 +114,11 @@ export default function PropertyInfoForm({
                       </button>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="p-4 text-sm text-gray-400 text-center italic">
-                    No tax declarations added yet. Use the field above to add one.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Title No. */}
         <div>
