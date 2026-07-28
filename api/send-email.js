@@ -1,27 +1,48 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import nodemailer from "nodemailer";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-interface EmailPayload {
-  referenceNumber: string;
-  transactionCategory: string;
-  assessmentType: string | null;
-  requestorName: string;
-  requestorEmail: string;
-  propertyName: string;
-  barangay: string;
-}
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-function buildEmailHtml(payload: EmailPayload): string {
-  const categoryLabel = payload.transactionCategory === "assessment" ? "Assessment" : "Certification";
-  const typeLabel = payload.assessmentType
-    ? payload.assessmentType.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const {
+    referenceNumber,
+    transactionCategory,
+    assessmentType,
+    requestorName,
+    requestorEmail,
+    propertyName,
+    barangay,
+  } = req.body;
+
+  if (!referenceNumber || !requestorEmail || !requestorName) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const categoryLabel = transactionCategory === "assessment" ? "Assessment" : "Certification";
+  const typeLabel = assessmentType
+    ? assessmentType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : "Certification Request";
 
-  return `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +84,7 @@ function buildEmailHtml(payload: EmailPayload): string {
           <tr>
             <td style="padding: 0 30px 20px;">
               <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
-                Dear <strong>${payload.requestorName}</strong>,
+                Dear <strong>${requestorName}</strong>,
               </p>
               <p style="margin: 10px 0 0; color: #374151; font-size: 14px; line-height: 1.6;">
                 Thank you for submitting your application to the Municipal Assessor's Office. Below are your application details:
@@ -78,7 +99,7 @@ function buildEmailHtml(payload: EmailPayload): string {
                 <tr>
                   <td style="padding: 15px; border-bottom: 1px solid #e2e8f0;">
                     <p style="margin: 0; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Transaction Code</p>
-                    <p style="margin: 5px 0 0; color: #1a3c6e; font-size: 22px; font-weight: bold; font-family: monospace; letter-spacing: 2px;">${payload.referenceNumber}</p>
+                    <p style="margin: 5px 0 0; color: #1a3c6e; font-size: 22px; font-weight: bold; font-family: monospace; letter-spacing: 2px;">${referenceNumber}</p>
                   </td>
                 </tr>
                 <tr>
@@ -90,13 +111,13 @@ function buildEmailHtml(payload: EmailPayload): string {
                 <tr>
                   <td style="padding: 15px; border-bottom: 1px solid #e2e8f0;">
                     <p style="margin: 0; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Property Owner</p>
-                    <p style="margin: 5px 0 0; color: #1e293b; font-size: 14px;">${payload.propertyName}</p>
+                    <p style="margin: 5px 0 0; color: #1e293b; font-size: 14px;">${propertyName}</p>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding: 15px;">
                     <p style="margin: 0; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Location</p>
-                    <p style="margin: 5px 0 0; color: #1e293b; font-size: 14px;">Barangay ${payload.barangay}, Balatan, Camarines Sur</p>
+                    <p style="margin: 5px 0 0; color: #1e293b; font-size: 14px;">Barangay ${barangay}, Balatan, Camarines Sur</p>
                   </td>
                 </tr>
               </table>
@@ -155,78 +176,18 @@ function buildEmailHtml(payload: EmailPayload): string {
   </table>
 </body>
 </html>`;
-}
-
-async function sendViaResend(to: string, subject: string, html: string): Promise<{ success: boolean; error?: string }> {
-  const apiKey = Deno.env.get("RESEND_API_KEY");
-
-  if (!apiKey) {
-    return { success: false, error: "RESEND_API_KEY not configured" };
-  }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Assessor's Office <AssessorsSystem@gmail.com>",
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
+    await transporter.sendMail({
+      from: `"${process.env.SMTP_FROM_NAME || "Assessor's Office"}" <${process.env.SMTP_USER}>`,
+      to: requestorEmail,
+      subject: `Application Received - ${referenceNumber}`,
+      html: html,
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { success: false, error: data.message || JSON.stringify(data) };
-    }
-
-    return { success: true };
+    return res.status(200).json({ success: true });
   } catch (error) {
-    return { success: false, error: error.message };
+    console.error("Email error:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 }
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    const payload: EmailPayload = await req.json();
-
-    if (!payload.referenceNumber || !payload.requestorEmail || !payload.requestorName) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const subject = `Application Received - ${payload.referenceNumber}`;
-    const html = buildEmailHtml(payload);
-
-    const result = await sendViaResend(payload.requestorEmail, subject, html);
-
-    if (!result.success) {
-      console.error("Email failed:", result.error);
-      return new Response(
-        JSON.stringify({ success: false, error: result.error }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-});

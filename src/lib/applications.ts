@@ -80,22 +80,30 @@ export async function getApplications(): Promise<ApplicationRecord[]> {
 }
 
 export async function sendConfirmationEmail(data: ApplicationData): Promise<{ success: boolean; error?: string }> {
-  const { error } = await supabase.functions.invoke('send-confirmation', {
-    body: {
-      referenceNumber: data.referenceNumber,
-      transactionCategory: data.transactionCategory,
-      assessmentType: data.assessmentType,
-      requestorName: data.requestorInfo.name,
-      requestorEmail: data.requestorInfo.email,
-      propertyName: data.propertyInfo.ownerName,
-      barangay: data.propertyInfo.barangay,
-    },
-  });
+  try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        referenceNumber: data.referenceNumber,
+        transactionCategory: data.transactionCategory,
+        assessmentType: data.assessmentType,
+        requestorName: data.requestorInfo.name,
+        requestorEmail: data.requestorInfo.email,
+        propertyName: data.propertyInfo.ownerName,
+        barangay: data.propertyInfo.barangay,
+      }),
+    });
 
-  if (error) {
+    const result = await res.json();
+
+    if (!res.ok) {
+      return { success: false, error: result.error || 'Failed to send email' };
+    }
+
+    return { success: true };
+  } catch (error) {
     console.error('Send email error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: 'Network error' };
   }
-
-  return { success: true };
 }
