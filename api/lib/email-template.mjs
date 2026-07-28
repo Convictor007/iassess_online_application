@@ -109,9 +109,21 @@ export function buildEmailHtml(payload) {
         <table width="640" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 1px solid #d1d5db;">
           <tr>
             <td style="background-color: #0f3b8f; padding: 10px 18px; text-align: left;">
-              <div style="color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: 0.2px;">
-                ASSESSORS ONLINE APPLICATION
-              </div>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="40" valign="middle">
+                    <img src="https://www.balatandrrm.org/wp-content/uploads/2025/09/cropped-balatan_logo-1.png" alt="Balatan Logo" width="36" height="36" style="display: block; border-radius: 50%;" />
+                  </td>
+                  <td style="padding-left: 10px;" valign="middle">
+                    <div style="color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: 0.2px;">
+                      ASSESSORS ONLINE APPLICATION
+                    </div>
+                    <div style="color: #93c5fd; font-size: 10px; margin-top: 2px;">
+                      Municipality of Balatan, Camarines Sur
+                    </div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
