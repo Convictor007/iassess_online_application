@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { PropertyInfo as PropertyInfoType } from '../types';
 import { BARANGAYS } from '../data/transactions';
 import NavButtons from './NavButtons';
@@ -10,6 +10,11 @@ interface PropertyInfoFormProps {
   onNext: () => void;
 }
 
+const isValidTaxDeclaration = (value: string) => {
+  const normalized = value.trim();
+  return normalized !== '' && normalized !== '--' && /[A-Za-z0-9]/.test(normalized);
+};
+
 export default function PropertyInfoForm({
   data,
   onChange,
@@ -18,13 +23,28 @@ export default function PropertyInfoForm({
 }: PropertyInfoFormProps) {
   const [localTaxDec, setLocalTaxDec] = useState('');
 
+  useEffect(() => {
+    const sanitized = data.taxDeclarations
+      .map((td) => td.trim())
+      .filter(isValidTaxDeclaration);
+    const hasChanged =
+      sanitized.length !== data.taxDeclarations.length ||
+      sanitized.some((td, index) => td !== data.taxDeclarations[index]);
+
+    if (hasChanged) {
+      onChange({ ...data, taxDeclarations: sanitized });
+    }
+  }, [data, onChange]);
+
   const update = (field: keyof PropertyInfoType, value: string | string[]) =>
     onChange({ ...data, [field]: value });
 
   const addTaxDec = () => {
-    if (localTaxDec.trim()) {
-      const cleaned = data.taxDeclarations.filter(td => td.trim());
-      onChange({ ...data, taxDeclarations: [...cleaned, localTaxDec.trim()] });
+    const normalized = localTaxDec.trim();
+
+    if (isValidTaxDeclaration(normalized)) {
+      const cleaned = data.taxDeclarations.filter(isValidTaxDeclaration);
+      onChange({ ...data, taxDeclarations: [...cleaned, normalized] });
       setLocalTaxDec('');
     }
   };
@@ -42,7 +62,9 @@ export default function PropertyInfoForm({
     });
   };
 
-  const validTaxDecs = data.taxDeclarations.filter(td => td.trim());
+  const validTaxDecs = data.taxDeclarations
+    .map((td, index) => ({ value: td, index }))
+    .filter(({ value }) => isValidTaxDeclaration(value));
   const isValid = data.ownerName.trim() !== '' && validTaxDecs.length > 0 && data.barangay !== '';
 
   return (
@@ -94,21 +116,21 @@ export default function PropertyInfoForm({
                 </tr>
               </thead>
               <tbody>
-                {validTaxDecs.map((td, i) => (
+                {validTaxDecs.map(({ value, index }, i) => (
                   <tr key={i} className="border-b border-gray-200">
                     <td className="p-2.5 text-sm text-gray-400 text-center">{i + 1}</td>
                     <td className="p-2.5">
                       <input
                         type="text"
-                        value={td}
-                        onChange={(e) => updateTaxDec(data.taxDeclarations.indexOf(td), e.target.value)}
+                        value={value}
+                        onChange={(e) => updateTaxDec(index, e.target.value)}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#1a3c6e] focus:border-[#1a3c6e]"
                         placeholder="Enter tax declaration number"
                       />
                     </td>
                     <td className="p-2.5 text-center">
                       <button
-                        onClick={() => removeTaxDec(data.taxDeclarations.indexOf(td))}
+                        onClick={() => removeTaxDec(index)}
                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                       >
                         Remove
