@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Page-1" id="6GqBapXG3jcXO6gZr6il">
-    <mxGraphModel dx="1203" dy="1800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="849" dy="1594" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -24,6 +24,12 @@
         </mxCell>
         <mxCell id="AXesSJUmZfQMwGa2QGB1-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="assessment transaction" vertex="1">
           <mxGeometry height="60" width="120" x="280" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-3" edge="1" parent="1" source="AXesSJUmZfQMwGa2QGB1-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="rxJVq_IBLeIy44WGkL9B-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-4" edge="1" parent="1" source="AXesSJUmZfQMwGa2QGB1-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="rxJVq_IBLeIy44WGkL9B-2">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="AXesSJUmZfQMwGa2QGB1-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="certification request" vertex="1">
           <mxGeometry height="60" width="120" x="280" y="270" as="geometry" />
@@ -155,6 +161,41 @@
         </mxCell>
         <mxCell id="AXesSJUmZfQMwGa2QGB1-82" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="select type to request" vertex="1">
           <mxGeometry height="30" width="120" x="510" y="-110" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-7" edge="1" parent="1" source="rxJVq_IBLeIy44WGkL9B-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="rxJVq_IBLeIy44WGkL9B-5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Certified True Copy of Tax Declaration" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-8" edge="1" parent="1" source="rxJVq_IBLeIy44WGkL9B-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="rxJVq_IBLeIy44WGkL9B-6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Certificate of Landholdings" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-9" edge="1" parent="1" source="rxJVq_IBLeIy44WGkL9B-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="250" />
+            </Array>
+            <mxPoint x="900" y="90" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Documents to Prepare: Certification Request" vertex="1">
+          <mxGeometry height="60" width="120" x="690" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-10" edge="1" parent="1" source="rxJVq_IBLeIy44WGkL9B-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="340" />
+              <mxPoint x="900" y="60" />
+            </Array>
+            <mxPoint x="900" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rxJVq_IBLeIy44WGkL9B-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Documents to Prepare: Certification Request" vertex="1">
+          <mxGeometry height="60" width="120" x="690" y="310" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
