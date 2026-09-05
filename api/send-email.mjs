@@ -1,4 +1,5 @@
 import { buildEmailHtml } from "./lib/email-template.mjs";
+import { buildOnlineEmailHtml } from "./lib/email-template-online.mjs";
 import { sendEmail } from "./lib/mailer.mjs";
 
 export default async function handler(req, res) {
@@ -26,11 +27,14 @@ export default async function handler(req, res) {
       : "Certification Request";
 
   try {
-    const html = buildEmailHtml(body);
+    // Use separate template for online submissions
+    const isOnline = body.submissionMethod === "online";
+    const html = isOnline ? buildOnlineEmailHtml(body) : buildEmailHtml(body);
+    const prefix = isOnline ? "[Online]" : "[Walk-in]";
 
     await sendEmail({
       to: body.requestorEmail,
-      subject: `Application Received - ${body.referenceNumber} | ${categoryLabel}`,
+      subject: `${prefix} Application Received - ${body.referenceNumber} | ${categoryLabel}`,
       html,
     });
 

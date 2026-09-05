@@ -1,14 +1,16 @@
-import type { ApplicationData } from '../types';
+import type { ApplicationData, DocumentType } from '../types';
 import { ASSESSMENT_LABELS, CATEGORY_LABELS, CERTIFICATES } from '../data/transactions';
+import type { UploadProgress } from '../lib/blob-upload';
 
 interface SummaryProps {
   data: ApplicationData;
   onBack: () => void;
   onSubmit: () => void;
   isSubmitting?: boolean;
+  uploadProgress?: Partial<Record<DocumentType, UploadProgress>>;
 }
 
-export default function Summary({ data, onBack, onSubmit, isSubmitting }: SummaryProps) {
+export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadProgress }: SummaryProps) {
   const certTotal = data.certificationSelections.reduce((sum, sel) => {
     const cert = CERTIFICATES.find((c) => c.id === sel.type);
     return sum + (cert ? cert.fee * sel.copies : 0);
@@ -69,6 +71,25 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting }: Summar
               <span>Total</span>
               <span>&#8369;{certTotal}</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submission Method */}
+      {data.submissionMethod && (
+        <div className="mb-4">
+          <div className="bg-gray-50 rounded-t px-3 py-1.5">
+            <h3 className="text-xs font-bold text-gray-700">Submission Method</h3>
+          </div>
+          <div className="bg-gray-100 border border-gray-200 rounded-b px-3 py-2">
+            <p className="text-sm text-gray-800 font-medium">
+              {data.submissionMethod === 'walk_in' ? 'Walk-in Submission' : 'Online Submission'}
+            </p>
+            {data.submissionMethod === 'online' && Object.keys(data.documents).length > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {Object.keys(data.documents).length} document(s) uploaded
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -175,6 +196,43 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting }: Summar
         <p className="text-[10px] text-[#0072D2] mb-0.5">Transaction Code</p>
         <p className="text-lg font-mono font-bold text-[#102E50]">{data.referenceNumber}</p>
       </div>
+
+      {/* Upload Progress (shown during submission) */}
+      {isSubmitting && Object.keys(uploadProgress || {}).length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            <span className="text-xs font-semibold text-blue-800">Uploading documents...</span>
+          </div>
+          <div className="space-y-2">
+            {Object.entries(uploadProgress!).map(([docType, progress]) => (
+              <div key={docType} className="text-[11px]">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-gray-700 capitalize">{docType.replace(/_/g, ' ')}</span>
+                  <span className={
+                    progress.status === 'done' ? 'text-green-600 font-medium' :
+                    progress.status === 'error' ? 'text-red-600 font-medium' :
+                    'text-blue-600'
+                  }>
+                    {progress.status === 'done' && <><i className="bi bi-check-circle-fill"></i> Done</>}
+                    {progress.status === 'error' && <><i className="bi bi-x-circle-fill"></i> Failed</>}
+                    {progress.status === 'uploading' && `${progress.progress}%`}
+                    {progress.status === 'pending' && 'Waiting...'}
+                  </span>
+                </div>
+                {progress.status === 'uploading' && (
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full transition-all"
+                      style={{ width: `${progress.progress}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="flex gap-3">

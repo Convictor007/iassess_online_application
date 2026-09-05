@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iAssess v3 - Application Flowchart</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 40px 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: #38bdf8;
+  }
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    margin-bottom: 40px;
+    font-size: 0.95rem;
+  }
+  .flowchart-container {
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 40px 30px;
+    border: 1px solid #334155;
+    overflow-x: auto;
+  }
+  .flowchart-container h2 {
+    color: #38bdf8;
+    margin-bottom: 24px;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+  }
+  .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+  .mermaid svg {
+    max-width: 100%;
+  }
+  .legend {
+    max-width: 1200px;
+    margin: 0 auto 40px;
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+  }
+  .info-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+  }
+  .info-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .info-card h3 {
+    color: #38bdf8;
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+  }
+  .info-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .info-card li {
+    padding: 6px 0;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #1e293b;
+  }
+  .info-card li:last-child { border-bottom: none; }
+  .info-card li strong { color: #f1f5f9; }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .tag-conditional { background: #854d0e; color: #fde047; }
+  .tag-api { background: #164e63; color: #67e8f9; }
+  .tag-db { background: #3b0764; color: #d8b4fe; }
+  .tag-email { background: #14532d; color: #86efac; }
+</style>
+</head>
+<body>
+
+<h1>iAssess v3 - Application Flowchart</h1>
+<p class="subtitle">Municipal Assessor's Office Online Application Form &mdash; Municipality of Balatan, Camarines Sur</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-color" style="background:#38bdf8"></div> Start/End</div>
+  <div class="legend-item"><div class="legend-color" style="background:#22c55e"></div> User Action</div>
+  <div class="legend-item"><div class="legend-color" style="background:#f59e0b"></div> Decision/Branch</div>
+  <div class="legend-item"><div class="legend-color" style="background:#a855f7"></div> API/Backend</div>
+  <div class="legend-item"><div class="legend-color" style="background:#ef4444"></div> Conditional Step</div>
+</div>
+
+<!-- MAIN FLOW -->
+<div class="flowchart-container">
+  <h2>Main Application Flow</h2>
+  <div class="mermaid">
+flowchart TD
+    START([HOME PAGE<br/>Landing Page]) --> CONSENT{Privacy Notice<br/>Accepted?}
+
+    CONSENT -->|No| PRIVACY[DATA PRIVACY NOTICE<br/>RA 10173 Compliance<br/>Click: Yes, I give consent]
+    CONSENT -->|Yes<br/>(localStorage)| TXN_SELECT
+
+    PRIVACY --> TXN_SELECT[TRANSACTION SELECT<br/>Choose: Assessment or Certification]
+
+    TXN_SELECT -->|Assessment| ASSESS_TYPE[ASSESSMENT TYPE<br/>Select sub-type]
+    TXN_SELECT -->|Certification| CERT_TYPE[CERTIFICATION TYPE<br/>Select cert + copies]
+
+    ASSESS_TYPE -->|Transfer of Ownership<br/>With Title| REQUIREMENTS
+    ASSESS_TYPE -->|Transfer of Ownership<br/>Handog Titulo| REQUIREMENTS
+    ASSESS_TYPE -->|Appraisal of Land<br/>First Time| REQUIREMENTS
+
+    CERT_TYPE --> REQUIREMENTS[REQUIREMENTS CHECKLIST<br/>Documents to prepare]
+
+    REQUIREMENTS --> SUB_METHOD[SUBMISSION METHOD<br/>Walk-in or Online?]
+
+    SUB_METHOD -->|Walk-in| PROPERTY_INFO
+    SUB_METHOD -->|Online| DOC_UPLOAD[DOCUMENT UPLOAD<br/>Upload scans/photos<br/>via Vercel Blob]
+
+    DOC_UPLOAD --> PROPERTY_INFO[PROPERTY INFORMATION<br/>Owner, Tax Dec, Title, Lot, Barangay]
+
+    PROPERTY_INFO --> REQ_INFO[REQUESTOR INFORMATION<br/>Name, Address, Contact,<br/>Email, Purpose]
+
+    REQ_INFO --> SUMMARY[APPLICATION SUMMARY<br/>Review all details]
+
+    SUMMARY -->|Return to Edit| PROPERTY_INFO
+    SUMMARY -->|Submit| SUBMIT
+
+    SUBMIT[SUBMIT APPLICATION<br/>POST /api/applications] --> EMAIL[SEND CONFIRMATION EMAIL<br/>POST /api/send-email]
+    EMAIL --> CONFIRMATION([CONFIRMATION PAGE<br/>Transaction Code Shown<br/>Email Sent])
+
+    CONFIRMATION --> TRACK[APPLICATION TRACKING<br/>Enter code on Home Page<br/>GET /api/applications]
+
+    TRACK --> STATUS{Status?}
+    STATUS -->|pending| TRACK
+    STATUS -->|processing| TRACK
+    STATUS -->|completed| DONE([DONE])
+    STATUS -->|cancelled| DONE
+
+    classDef startEnd fill:#0ea5e9,stroke:#0284c7,color:#fff,stroke-width:2px
+    classDef userAction fill:#22c55e,stroke:#16a34a,color:#fff,stroke-width:2px
+    classDef decision fill:#f59e0b,stroke:#d97706,color:#000,stroke-width:2px
+    classDef api fill:#a855f7,stroke:#9333ea,color:#fff,stroke-width:2px
+    classDef conditional fill:#ef4444,stroke:#dc2626,color:#fff,stroke-width:2px
+
+    class START,CONFIRMATION,DONE startEnd
+    class PRIVACY,TXN_SELECT,ASSESS_TYPE,CERT_TYPE,REQUIREMENTS,SUB_METHOD,PROPERTY_INFO,REQ_INFO,SUMMARY userAction
+    class CONSENT,STATUS decision
+    class DOC_UPLOAD conditional
+    class SUBMIT,EMAIL api
+  </div>
+</div>
+
+<!-- ASSESSMENT BRANCH DETAIL -->
+<div class="flowchart-container">
+  <h2>Assessment Type Sub-Flow</h2>
+  <div class="mermaid">
+flowchart LR
+    A[Assessment Type] --> B{Sub-type?}
+    B --> C[Transfer of Ownership<br/>With Title]
+    B --> D[Transfer of Ownership<br/>Handog Titulo]
+    B --> E[Appraisal of Land<br/>First Time]
+
+    C --> C1[Required Documents:<br/>1. Original Title<br/>2. Deed of Sale<br/>3. Tax Declaration<br/>4. Transfer Tax Receipt<br/>5. Tax Payment Certificate<br/>6. CAR from BIR<br/>7. SPA if representative]
+    
+    D --> D1[Required Documents:<br/>1. Transfer papers<br/>2. Tax Declaration<br/>3. Transfer Tax Receipt<br/>4. Tax Payment Certificate<br/>5. CAR from BIR<br/>6. SPA if representative]
+
+    E --> E1[Required Documents:<br/>1. Survey Plan<br/>2. CENRO Certification<br/>3. Affidavit of Ownership<br/>4. Affidavit of Possession<br/>5. Barangay Cert of Possessor<br/>6. Valid ID<br/>7. SPA if representative<br/>8. Ocular Inspection Report]
+
+    classDef type fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef doc fill:#1e293b,stroke:#38bdf8,color:#e2e8f0
+    classDef decision fill:#f59e0b,stroke:#d97706,color:#000
+
+    class A type
+    class C1,D1,E1 doc
+    class B decision
+  </div>
+</div>
+
+<!-- CERTIFICATION BRANCH DETAIL -->
+<div class="flowchart-container">
+  <h2>Certification Type Sub-Flow</h2>
+  <div class="mermaid">
+flowchart LR
+    A[Certification Request] --> B[Select Certificates<br/>+ Number of Copies]
+    B --> C{Certificate Type}
+    C --> D[Certified True Copy<br/>of Tax Declaration<br/>PHP 50 per TD per copy]
+    C --> E[Certificate of<br/>Landholdings<br/>PHP 50 per copy]
+    D --> F[Required Documents:<br/>1. Valid ID<br/>2. SPA if representative<br/>3. Purpose of request<br/>4. Requestor ID]
+    E --> F
+    F --> G[Total Fees<br/>Calculated Automatically]
+
+    classDef type fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef doc fill:#1e293b,stroke:#38bdf8,color:#e2e8f0
+    classDef decision fill:#f59e0b,stroke:#d97706,color:#000
+
+    class A,B type
+    class F,G doc
+    class C decision
+  </div>
+</div>
+
+<!-- DOCUMENT UPLOAD DETAIL -->
+<div class="flowchart-container">
+  <h2>Document Upload Sub-Flow (Online Submission)</h2>
+  <div class="mermaid">
+flowchart TD
+    START[Document Upload Step] --> CHECK{All required<br/>documents uploaded?}
+    CHECK -->|No| UPLOAD[Upload Document<br/>Drag & Drop / Camera / File Picker<br/>JPG, PNG, WebP, HEIC, PDF<br/>Max 10MB each]
+    UPLOAD --> TOKEN[Request Upload Token<br/>POST /api/upload]
+    TOKEN --> BLOB[Upload to Vercel Blob<br/>Direct from client]
+    BLOB --> STORE[Store file reference<br/>in application state]
+    STORE --> CHECK
+    CHECK -->|Yes| NEXT[Next: Property Information]
+
+    classDef start fill:#0ea5e9,stroke:#0284c7,color:#fff
+    classDef action fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef decision fill:#f59e0b,stroke:#d97706,color:#000
+    classDef api fill:#a855f7,stroke:#9333ea,color:#fff
+
+    class START,NEXT startEnd
+    class UPLOAD action
+    class CHECK decision
+    class TOKEN,BLOB api
+    class STORE action
+  </div>
+</div>
+
+<!-- BACKEND / API FLOW -->
+<div class="flowchart-container">
+  <h2>Backend API & Status Flow</h2>
+  <div class="mermaid">
+flowchart TD
+    subgraph PUBLIC["Public API (No Auth)"]
+        POST_APP[POST /api/applications<br/>Submit new application]
+        POST_UPLOAD[POST /api/upload<br/>Get Vercel Blob token]
+        GET_DOCS[GET /api/documents/view<br/>Signed download URL]
+        POST_EMAIL[POST /api/send-email<br/>Send confirmation email]
+    end
+
+    subgraph SECURE["Secure API (x-api-key)"]
+        GET_APP[GET /api/applications<br/>List / Search / Track]
+        GET_APP_ID[GET /api/applications/:id<br/>Get by UUID]
+        PATCH_APP[PATCH /api/applications<br/>Update status]
+    end
+
+    subgraph DB["Neon PostgreSQL"]
+        TABLE[(applications table<br/>status: pending)]
+    end
+
+    subgraph STORAGE["Vercel Blob"]
+        FILES[(Private file storage<br/>/{appId}/{docType}-{ts}.{ext})]
+    end
+
+    subgraph STATUS["Application Status Lifecycle"]
+        PENDING(pending) -->|Staff reviews| PROCESSING(processing)
+        PROCESSING -->|Approved| COMPLETED(completed)
+        PENDING -->|Rejected| CANCELLED(cancelled)
+        PROCESSING -->|Rejected| CANCELLED
+    end
+
+    subgraph APPROVAL["3-Step Approval Pipeline (DB schema, mobile app)"]
+        A1[Appraiser Review<br/>step_order: 1] -->|Approved| A2[Recommender Review<br/>step_order: 2]
+        A2 -->|Approved| A3[Approver Final<br/>step_order: 3]
+        A1 -->|Rejected| REJECT([Rejected])
+        A2 -->|Rejected| REJECT
+        A3 -->|Rejected| REJECT
+        A3 -->|Approved| APPROVED([Approved])
+    end
+
+    POST_APP --> TABLE
+    POST_UPLOAD --> FILES
+    GET_APP --> TABLE
+    PATCH_APP --> TABLE
+
+    classDef public fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef secure fill:#a855f7,stroke:#9333ea,color:#fff
+    classDef db fill:#0ea5e9,stroke:#0284c7,color:#fff
+    classDef status fill:#f59e0b,stroke:#d97706,color:#000
+    classDef approval fill:#38bdf8,stroke:#0ea5e9,color:#000
+
+    class POST_APP,POST_UPLOAD,GET_DOCS,POST_EMAIL public
+    class GET_APP,GET_APP_ID,PATCH_APP secure
+    class TABLE,FILES db
+    class PENDING,PROCESSING,COMPLETED,CANCELLED status
+    class A1,A2,A3 approval
+  </div>
+</div>
+
+<!-- INFO CARDS -->
+<div class="info-grid">
+  <div class="info-card">
+    <h3>Technology Stack</h3>
+    <ul>
+      <li><strong>Frontend:</strong> React 19 + TypeScript + Tailwind CSS</li>
+      <li><strong>Build:</strong> Vite 5</li>
+      <li><strong>Backend:</strong> Vercel Serverless Functions</li>
+      <li><strong>Database:</strong> Neon PostgreSQL</li>
+      <li><strong>File Storage:</strong> Vercel Blob (private)</li>
+      <li><strong>Email:</strong> Nodemailer via Gmail SMTP</li>
+      <li><strong>Deployment:</strong> Vercel</li>
+    </ul>
+  </div>
+  <div class="info-card">
+    <h3>Transaction Types</h3>
+    <ul>
+      <li><strong>Assessment:</strong></li>
+      <li>&nbsp;&nbsp;- Transfer of Ownership (With Title)</li>
+      <li>&nbsp;&nbsp;- Transfer of Ownership (Handog Titulo)</li>
+      <li>&nbsp;&nbsp;- Appraisal of Land (First Time)</li>
+      <li><strong>Certification:</strong></li>
+      <li>&nbsp;&nbsp;- Certified True Copy of TD (PHP 50/cop)</li>
+      <li>&nbsp;&nbsp;- Certificate of Landholdings (PHP 50/cop)</li>
+    </ul>
+  </div>
+  <div class="info-card">
+    <h3>Key Components</h3>
+    <ul>
+      <li><strong>12 steps</strong> in the wizard flow</li>
+      <li><strong>8+</strong> React components</li>
+      <li><strong>7</strong> API endpoints</li>
+      <li><strong>Dynamic branching</strong> based on user selection</li>
+      <li><strong>Payment module</strong> built but not yet active</li>
+      <li><strong>Mobile app</strong> schema ready (3-step approval)</li>
+    </ul>
+  </div>
+  <div class="info-card">
+    <h3>Flow Summary</h3>
+    <ul>
+      <li>1. <strong>Home</strong> - Landing page + tracking</li>
+      <li>2. <strong>Privacy Notice</strong> - RA 10173 consent</li>
+      <li>3. <strong>Transaction Select</strong> - Assessment or Certification</li>
+      <li>4. <strong>Type Selection</strong> - Sub-type + fees</li>
+      <li>5. <strong>Requirements</strong> - Document checklist</li>
+      <li>6. <strong>Submission Method</strong> - Walk-in or Online</li>
+      <li>7. <strong>Document Upload</strong> - If online (conditional)</li>
+      <li>8. <strong>Property Info</strong> - Owner & land details</li>
+      <li>9. <strong>Requestor Info</strong> - Contact details</li>
+      <li>10. <strong>Summary</strong> - Review before submit</li>
+      <li>11. <strong>Submit</strong> - Save + email notification</li>
+      <li>12. <strong>Confirmation</strong> - Transaction code issued</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#38bdf8',
+      primaryTextColor: '#fff',
+      primaryBorderColor: '#0284c7',
+      lineColor: '#64748b',
+      secondaryColor: '#1e293b',
+      tertiaryColor: '#0f172a',
+      fontSize: '14px',
+      fontFamily: 'Segoe UI, system-ui, sans-serif'
+    },
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true,
+      curve: 'basis',
+      nodeSpacing: 30,
+      rankSpacing: 50
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,16 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+import {
+  createTransaction,
+  getFullTransaction,
+  listTransactions,
+  updateTransactionStatus,
+} from "./lib/repository.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 
-function getClient(useAdmin = false) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = useAdmin ? process.env.SUPABASE_SECRET_KEY : process.env.VITE_SUPABASE_ANON_KEY;
-  return createClient(url, key);
-}
-
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-api-key");
 }
 
@@ -29,44 +28,92 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // POST /api/applications — submit new application (no auth required, called from frontend)
+  if (req.method === "POST") {
+    const body = req.body;
+    if (!body) {
+      return res.status(400).json({ error: "No body provided" });
+    }
+
+    const {
+      referenceNumber, transactionCategory, assessmentType, certificationSelections,
+      submissionMethod,
+      ownerName, taxDeclarations, titleNo, lotNo, blockNo, streetName, barangay,
+      requestorName, requestorAddress, requestorContact, requestorEmail, purpose,
+    } = body;
+
+    if (!referenceNumber || !transactionCategory || !ownerName || !requestorName || !requestorEmail) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const validSubmissionMethods = ["walk_in", "online", null];
+    const submissionMethodValue = validSubmissionMethods.includes(submissionMethod) ? submissionMethod : null;
+
+    try {
+      const trnId = await createTransaction({
+        reference_number: referenceNumber,
+        category: transactionCategory,
+        submission_method: submissionMethodValue,
+        assessment_type: assessmentType || undefined,
+        certifications: (certificationSelections || []).map(c => ({
+          cert_type: c.type,
+          copies: c.copies,
+          fee: c.fee || 0,
+        })),
+        property: {
+          owner_name: ownerName,
+          title_no: titleNo,
+          lot_no: lotNo,
+          block_no: blockNo,
+          street_name: streetName,
+          barangay,
+          tax_declarations: taxDeclarations || [],
+        },
+        requestor: {
+          name: requestorName,
+          address: requestorAddress,
+          contact_number: requestorContact,
+          email: requestorEmail,
+          purpose,
+        },
+      });
+
+      return res.status(200).json({ success: true, referenceNumber, id: trnId });
+    } catch (err) {
+      console.error("POST /api/applications error:", err);
+      return res.status(500).json({ error: "Failed to submit application" });
+    }
+  }
+
+  // All methods below require API key
   if (!verifyAuth(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
+  // GET /api/applications — list, search, or track
   if (req.method === "GET") {
     try {
-      const { status, search } = req.query;
+      const { status, search, reference_number } = req.query;
 
-      let query = getClient()
-        .from("applications")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (status && status !== "all") {
-        query = query.eq("status", status);
+      // Track by reference number (public-facing)
+      if (reference_number) {
+        const txn = await getFullTransaction(reference_number);
+        if (!txn) {
+          return res.status(404).json({ error: "Application not found" });
+        }
+        return res.status(200).json({ success: true, data: txn });
       }
 
-      if (search) {
-        const term = `%${search}%`;
-        query = query.or(
-          `reference_number.ilike.${term},owner_name.ilike.${term},requestor_name.ilike.${term},barangay.ilike.${term}`
-        );
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Supabase query error:", error);
-        return res.status(500).json({ error: error.message });
-      }
-
-      return res.status(200).json({ success: true, data: data || [] });
+      // List with filters
+      const rows = await listTransactions({ status, search });
+      return res.status(200).json({ success: true, data: rows || [] });
     } catch (err) {
       console.error("GET /api/applications error:", err);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
 
+  // PATCH /api/applications — update application status
   if (req.method === "PATCH") {
     const body = req.body;
     if (!body) {
@@ -83,18 +130,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid status" });
     }
 
-    const { data, error } = await getClient(true)
-      .from("applications")
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) {
-      return res.status(500).json({ error: error.message, code: error.code });
+    try {
+      const updated = await updateTransactionStatus(Number(id), status, "api");
+      if (!updated) {
+        return res.status(404).json({ error: "Application not found" });
+      }
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error("PATCH /api/applications error:", err);
+      return res.status(500).json({ error: "Failed to update application" });
     }
-
-    return res.status(200).json({ success: true, data });
   }
 
   return res.status(405).json({ error: "Method not allowed" });

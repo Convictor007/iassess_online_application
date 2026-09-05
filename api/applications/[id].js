@@ -1,8 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { getTransactionById } from "../lib/repository.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 
@@ -42,17 +38,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "id is required" });
     }
 
-    const { data, error } = await supabase
-      .from("applications")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const txn = await getTransactionById(Number(id));
 
-    if (error || !data) {
+    if (!txn) {
       return res.status(404).json({ error: "Application not found" });
     }
 
-    return res.status(200).json({ success: true, data });
+    return res.status(200).json({ success: true, data: txn });
   } catch (err) {
     console.error("GET /api/applications/:id error:", err);
     return res.status(500).json({ error: "Internal server error" });

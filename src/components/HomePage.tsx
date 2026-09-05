@@ -34,16 +34,15 @@ export default function HomePage({ onApply }: HomePageProps) {
         <div className="bg-white/10 rounded p-3 text-[11px] leading-relaxed text-blue-100">
           <p className="mb-2">
             Due to the high volume of clients transacting with the Municipal Assessor&apos;s Office,
-            we are implementing a new schedule for document processing.
+            we are implementing an online application system for your convenience.
           </p>
           <p className="mb-2">
-            <strong className="text-white">Assessment Transactions:</strong> Accepting and releasing
-            on a Tuesday and Thursday schedule only.
+            <strong className="text-white">Assessment Transactions:</strong> Please submit your
+            application online and wait for the appointment date sent to your email.
           </p>
           <p className="text-white font-medium">
-            A TRANSACTION CODE will be sent via email with an appointment date or release date.
-            Walk-in clients not on schedule will not be entertained. We strongly advise you to send
-            your requests online before you visit our office.
+            A TRANSACTION CODE will be sent via email upon submission.
+            We strongly advise you to send your requests online before you visit our office.
           </p>
         </div>
       </div>
@@ -113,7 +112,7 @@ export default function HomePage({ onApply }: HomePageProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Type:</span>
-                <span className="font-medium capitalize">{trackingResult.transaction_category}</span>
+                <span className="font-medium capitalize">{trackingResult.category}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Submitted:</span>
@@ -129,15 +128,15 @@ export default function HomePage({ onApply }: HomePageProps) {
           <p className="text-xs font-semibold text-[#0072D2] mb-2">Contact Us!</p>
           <ul className="space-y-1.5 text-[11px] text-gray-600">
             <li className="flex items-center gap-1.5">
-              <span className="text-[#0072D2]">&#9654;</span>
+              <i className="bi bi-building text-[#0072D2]"></i>
               Municipal Assessor&apos;s Office
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-[#0072D2]">&#9993;</span>
+              <i className="bi bi-envelope-fill text-[#0072D2]"></i>
               balatan.assessor@gmail.com
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-[#0072D2]">&#9742;</span>
+              <i className="bi bi-geo-alt-fill text-[#0072D2]"></i>
               Municipal Hall, Balatan, Camarines Sur
             </li>
           </ul>

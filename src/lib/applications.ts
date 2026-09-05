@@ -1,82 +1,104 @@
-import { supabase } from './supabase';
 import type { ApplicationData } from '../types';
 
+/**
+ * Matches the shape returned by getFullTransaction() in repository.mjs.
+ * The API returns a flat joined object from transactions + properties + requestors + assessments.
+ */
 export interface ApplicationRecord {
-  id: string;
+  id: number;
   reference_number: string;
-  transaction_category: string;
-  assessment_type: string | null;
-  certification_selections: Array<{ type: string; copies: number }>;
-  owner_name: string;
-  tax_declarations: string[];
-  title_no: string;
-  lot_no: string;
-  block_no: string;
-  street_name: string;
-  barangay: string;
-  requestor_name: string;
-  requestor_address: string;
-  requestor_contact: string;
-  requestor_email: string;
-  purpose: string;
+  category: string;
+  submission_method: string | null;
   status: string;
+  notes: string | null;
   created_at: string;
+  updated_at: string;
+  // from assessments (nullable)
+  assessment_type: string | null;
+  // from properties (nullable)
+  owner_name: string | null;
+  title_no: string | null;
+  lot_no: string | null;
+  block_no: string | null;
+  street_name: string | null;
+  barangay: string | null;
+  // from requestors (nullable)
+  requestor_name: string | null;
+  requestor_address: string | null;
+  requestor_contact: string | null;
+  requestor_email: string | null;
+  purpose: string | null;
 }
 
 export async function submitApplication(data: ApplicationData): Promise<{ referenceNumber: string; error?: string }> {
-  const { error } = await supabase.from('applications').insert({
-    reference_number: data.referenceNumber,
-    transaction_category: data.transactionCategory,
-    assessment_type: data.assessmentType,
-    certification_selections: data.certificationSelections,
-    owner_name: data.propertyInfo.ownerName,
-    tax_declarations: data.propertyInfo.taxDeclarations.filter(td => td.trim()),
-    title_no: data.propertyInfo.titleNo || null,
-    lot_no: data.propertyInfo.lotNo || null,
-    block_no: data.propertyInfo.blockNo || null,
-    street_name: data.propertyInfo.streetName || null,
-    barangay: data.propertyInfo.barangay,
-    requestor_name: data.requestorInfo.name,
-    requestor_address: data.requestorInfo.address,
-    requestor_contact: data.requestorInfo.contactNumber,
-    requestor_email: data.requestorInfo.email,
-    purpose: data.requestorInfo.purpose,
-    status: 'pending',
-  });
+  try {
+    const res = await fetch('/api/applications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        referenceNumber: data.referenceNumber,
+        transactionCategory: data.transactionCategory,
+        assessmentType: data.assessmentType,
+        certificationSelections: data.certificationSelections,
+        submissionMethod: data.submissionMethod,
+        ownerName: data.propertyInfo.ownerName,
+        taxDeclarations: data.propertyInfo.taxDeclarations.filter(td => td.trim()),
+        titleNo: data.propertyInfo.titleNo || null,
+        lotNo: data.propertyInfo.lotNo || null,
+        blockNo: data.propertyInfo.blockNo || null,
+        streetName: data.propertyInfo.streetName || null,
+        barangay: data.propertyInfo.barangay,
+        requestorName: data.requestorInfo.name,
+        requestorAddress: data.requestorInfo.address,
+        requestorContact: data.requestorInfo.contactNumber,
+        requestorEmail: data.requestorInfo.email,
+        purpose: data.requestorInfo.purpose,
+      }),
+    });
 
-  if (error) {
+    const result = await res.json();
+
+    if (!res.ok) {
+      return { referenceNumber: data.referenceNumber, error: result.error || 'Failed to submit' };
+    }
+
+    return { referenceNumber: result.referenceNumber };
+  } catch (error) {
     console.error('Submit application error:', error);
-    return { referenceNumber: data.referenceNumber, error: error.message };
+    return { referenceNumber: data.referenceNumber, error: 'Network error' };
   }
-
-  return { referenceNumber: data.referenceNumber };
 }
 
 export async function trackApplication(referenceNumber: string): Promise<ApplicationRecord | null> {
-  const { data, error } = await supabase
-    .from('applications')
-    .select('*')
-    .eq('reference_number', referenceNumber.toUpperCase().trim())
-    .single();
+  try {
+    const apiKey = import.meta.env.VITE_MOBILE_API_KEY || '';
+    const res = await fetch(`/api/applications?reference_number=${encodeURIComponent(referenceNumber)}`, {
+      headers: { 'x-api-key': apiKey },
+    });
 
-  if (error || !data) {
+    if (!res.ok) return null;
+
+    const result = await res.json();
+    return result.data as ApplicationRecord;
+  } catch {
     return null;
   }
-
-  return data as ApplicationRecord;
 }
 
 export async function getApplications(): Promise<ApplicationRecord[]> {
-  const { data, error } = await supabase
-    .from('applications')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const apiKey = import.meta.env.VITE_MOBILE_API_KEY || '';
+    const res = await fetch('/api/applications', {
+      headers: { 'x-api-key': apiKey },
+    });
 
-  if (error || !data) {
+    if (!res.ok) return [];
+
+    const result = await res.json();
+    return result.data as ApplicationRecord[];
+  } catch {
     return [];
   }
-
-  return data as ApplicationRecord[];
 }
 
 export async function sendConfirmationEmail(data: ApplicationData): Promise<{ success: boolean; error?: string }> {
@@ -89,6 +111,8 @@ export async function sendConfirmationEmail(data: ApplicationData): Promise<{ su
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
         certificationSelections: data.certificationSelections,
+        submissionMethod: data.submissionMethod,
+        documents: data.uploadedDocuments ?? {},
         requestorName: data.requestorInfo.name,
         requestorEmail: data.requestorInfo.email,
         requestorContact: data.requestorInfo.contactNumber,

@@ -6,10 +6,14 @@ import type {
   CertificationSelection,
   PropertyInfo,
   RequestorInfo,
+  SubmissionMethod,
+  DocumentType,
+  PendingDocument,
   Step,
 } from './types';
-import { REQUIREMENTS, generateReferenceNumber, ASSESSMENT_LABELS } from './data/transactions';
+import { REQUIREMENTS, CERT_REQUIREMENTS, generateReferenceNumber, ASSESSMENT_LABELS } from './data/transactions';
 import { submitApplication, sendConfirmationEmail } from './lib/applications';
+import { uploadAllDocuments, type UploadProgress } from './lib/blob-upload';
 
 import HomePage from './components/HomePage';
 import Header from './components/Header';
@@ -19,6 +23,8 @@ import TransactionSelect from './components/TransactionSelect';
 import AssessmentTypeSelect from './components/AssessmentTypeSelect';
 import CertificationTypeSelect from './components/CertificationTypeSelect';
 import Requirements from './components/Requirements';
+import SubmissionMethodSelect from './components/SubmissionMethod';
+import DocumentUpload from './components/DocumentUpload';
 import PropertyInfoForm from './components/PropertyInfoForm';
 import RequestorInfoForm from './components/RequestorInfoForm';
 import Summary from './components/Summary';
@@ -30,6 +36,9 @@ const INITIAL_DATA: ApplicationData = {
   transactionCategory: null,
   assessmentType: null,
   certificationSelections: [],
+  submissionMethod: null,
+  documents: {},
+  uploadedDocuments: {},
   propertyInfo: {
     ownerName: '',
     taxDeclarations: [],
@@ -57,6 +66,8 @@ const STEP_LABELS: Record<Step, string> = {
   assessment_type: 'Assessment Type',
   certification_type: 'Certification Type',
   requirements: 'Documents to Prepare',
+  submission_method: 'Submission Method',
+  document_upload: 'Upload Documents',
   property_info: 'Property Information',
   requestor_info: 'Requestor Information',
   summary: 'Application Summary',
@@ -72,6 +83,7 @@ export default function App() {
   const [data, setData] = useState<ApplicationData>(INITIAL_DATA);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Partial<Record<DocumentType, UploadProgress>>>({});
 
   const getStepFlow = useCallback((): Step[] => {
     const base: Step[] = ['home'];
@@ -82,14 +94,20 @@ export default function App() {
     }
 
     if (data.transactionCategory === 'assessment') {
-      base.push('assessment_type', 'requirements', 'property_info', 'requestor_info');
+      base.push('assessment_type', 'requirements');
     } else if (data.transactionCategory === 'certification') {
-      base.push('certification_type', 'requirements', 'property_info', 'requestor_info');
+      base.push('certification_type', 'requirements');
     }
 
-    base.push('summary', 'confirmation');
+    base.push('submission_method');
+
+    if (data.submissionMethod === 'online') {
+      base.push('document_upload');
+    }
+
+    base.push('property_info', 'requestor_info', 'summary', 'confirmation');
     return base;
-  }, [data.transactionCategory, consentGiven]);
+  }, [data.transactionCategory, data.submissionMethod, consentGiven]);
 
   const stepFlow = getStepFlow();
   const totalSteps = stepFlow.length;
@@ -170,21 +188,75 @@ export default function App() {
               setData((d) => ({ ...d, certificationSelections: sel }))
             }
             onBack={goBack}
-            onNext={() => goNext('property_info')}
+            onNext={() => goNext('requirements')}
           />
         );
 
       case 'requirements':
-        return data.assessmentType ? (
-          <Requirements
-            title={`Documents to Prepare: ${ASSESSMENT_LABELS[data.assessmentType]}`}
-            requirements={REQUIREMENTS[data.assessmentType]}
-            note="Please bring these documents on your scheduled appointment date. Incomplete documents will not be processed."
-            downloadLinks={getDownloadLinks()}
+        if (data.transactionCategory === 'assessment' && data.assessmentType) {
+          return (
+            <Requirements
+              title={`Documents to Prepare: ${ASSESSMENT_LABELS[data.assessmentType]}`}
+              requirements={REQUIREMENTS[data.assessmentType]}
+              note="Please bring these documents on your scheduled appointment date. Incomplete documents will not be processed."
+              downloadLinks={getDownloadLinks()}
+              onBack={goBack}
+              onNext={() => goNext('submission_method')}
+            />
+          );
+        }
+        if (data.transactionCategory === 'certification') {
+          return (
+            <Requirements
+              title="Documents to Prepare: Certification Request"
+              requirements={CERT_REQUIREMENTS}
+              note="Please bring these documents on your scheduled appointment date. Incomplete documents will not be processed."
+              onBack={goBack}
+              onNext={() => goNext('submission_method')}
+            />
+          );
+        }
+        return null;
+
+      case 'submission_method':
+        return (
+          <SubmissionMethodSelect
+            selected={data.submissionMethod}
+            onSelect={(method: SubmissionMethod) =>
+              setData((d) => ({ ...d, submissionMethod: method, documents: {} }))
+            }
+            onBack={goBack}
+            onNext={() => {
+              if (data.submissionMethod === 'online') goNext('document_upload');
+              else goNext('property_info');
+            }}
+          />
+        );
+
+      case 'document_upload':
+        return (
+          <DocumentUpload
+            transactionCategory={data.transactionCategory!}
+            assessmentType={data.assessmentType}
+            certificationSelections={data.certificationSelections}
+            documents={data.documents as Partial<Record<DocumentType, PendingDocument>>}
+            onDocumentAdd={(type: DocumentType, doc: PendingDocument) =>
+              setData((d) => ({ ...d, documents: { ...d.documents, [type]: doc } }))
+            }
+            onDocumentRemove={(type: DocumentType) =>
+              setData((d) => {
+                const docs = { ...d.documents };
+                if (docs[type]?.previewUrl) {
+                  URL.revokeObjectURL(docs[type]!.previewUrl);
+                }
+                delete docs[type];
+                return { ...d, documents: docs };
+              })
+            }
             onBack={goBack}
             onNext={() => goNext('property_info')}
           />
-        ) : null;
+        );
 
       case 'property_info':
         return (
@@ -217,9 +289,33 @@ export default function App() {
             data={data}
             onBack={goBack}
             isSubmitting={isSubmitting}
+            uploadProgress={uploadProgress}
             onSubmit={async () => {
               setIsSubmitting(true);
+              setUploadProgress({});
               try {
+                // Step 1: Upload all pending documents to Vercel Blob
+                const hasDocuments = Object.keys(data.documents).length > 0;
+                if (hasDocuments) {
+                  const { uploaded, errors } = await uploadAllDocuments(
+                    data.documents,
+                    data.referenceNumber,
+                    (docType, progress) => {
+                      setUploadProgress((prev) => ({ ...prev, [docType]: progress }));
+                    },
+                  );
+
+                  if (errors.length > 0) {
+                    alert(`Some documents failed to upload:\n${errors.join('\n')}\n\nPlease try again.`);
+                    return;
+                  }
+
+                  // Store uploaded document URLs
+                  setData((d) => ({ ...d, uploadedDocuments: uploaded }));
+                  data.uploadedDocuments = uploaded;
+                }
+
+                // Step 2: Submit the application
                 const { error } = await submitApplication(data);
                 if (error) {
                   console.error('Failed to submit:', error);
@@ -238,6 +334,7 @@ export default function App() {
                 goNext('confirmation');
               } finally {
                 setIsSubmitting(false);
+                setUploadProgress({});
               }
             }}
           />

@@ -33,3 +33,6 @@ supabase/.temp/
 
 .vercel
 .env*
+
+# Claude Code settings (contains API tokens)
+.claude/settings.json

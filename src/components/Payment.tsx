@@ -136,9 +136,7 @@ export default function Payment({ data, onBack, onConfirm }: PaymentProps) {
               {pm.logo ? (
                 <img src={pm.logo} alt={pm.label} className="h-6 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               ) : (
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                </svg>
+                <i className="bi bi-credit-card text-xl text-gray-500"></i>
               )}
               <span className="text-xs font-medium text-gray-800">{pm.label}</span>
             </button>
@@ -312,9 +310,7 @@ export default function Payment({ data, onBack, onConfirm }: PaymentProps) {
       {step === 'success' && (
         <div className="text-center py-4">
           <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
+            <i className="bi bi-check-circle-fill text-green-600 text-2xl"></i>
           </div>
           <h3 className="text-base font-bold text-gray-800 mb-1">Payment Successful!</h3>
           <p className="text-[11px] text-gray-500 mb-4">Your payment has been confirmed.</p>
