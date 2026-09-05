@@ -40,6 +40,7 @@ export default async function handler(req, res) {
       submissionMethod,
       ownerName, taxDeclarations, titleNo, lotNo, blockNo, streetName, barangay,
       requestorName, requestorAddress, requestorContact, requestorEmail, purpose,
+      documents,
     } = body;
 
     if (!referenceNumber || !transactionCategory || !ownerName || !requestorName || !requestorEmail) {
@@ -76,6 +77,13 @@ export default async function handler(req, res) {
           email: requestorEmail,
           purpose,
         },
+        documents: (documents || []).map(d => ({
+          doc_type: d.doc_type,
+          file_name: d.file_name,
+          file_url: d.file_url,
+          mime_type: d.mime_type || null,
+          file_size: d.file_size || null,
+        })),
       });
 
       return res.status(200).json({ success: true, referenceNumber, id: trnId });

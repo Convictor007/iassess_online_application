@@ -122,7 +122,17 @@ export async function getFullTransaction(referenceNumber) {
     LIMIT 1
   `;
 
-  return rows[0] || null;
+  if (!rows[0]) return null;
+
+  const txn = rows[0];
+
+  // Fetch documents separately (1:N)
+  const docs = await sql`
+    SELECT id, doc_type, file_name, file_url, blob_pathname, mime_type, file_size, uploaded_at
+    FROM documents WHERE trn_id = ${txn.id} ORDER BY uploaded_at
+  `;
+
+  return { ...txn, documents: docs };
 }
 
 /**
@@ -150,7 +160,15 @@ export async function getTransactionById(id) {
     LIMIT 1
   `;
 
-  return rows[0] || null;
+  if (!rows[0]) return null;
+
+  const txn = rows[0];
+  const docs = await sql`
+    SELECT id, doc_type, file_name, file_url, blob_pathname, mime_type, file_size, uploaded_at
+    FROM documents WHERE trn_id = ${txn.id} ORDER BY uploaded_at
+  `;
+
+  return { ...txn, documents: docs };
 }
 
 /**

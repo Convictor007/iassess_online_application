@@ -32,6 +32,17 @@ export interface ApplicationRecord {
 
 export async function submitApplication(data: ApplicationData): Promise<{ referenceNumber: string; error?: string }> {
   try {
+    // Build documents array from uploaded blob URLs
+    const documents = Object.entries(data.uploadedDocuments || {}).map(([docType, val]) => {
+      if (!val) return null;
+      return {
+        doc_type: docType,
+        file_name: val.fileName,
+        file_url: val.fileUrl,
+        uploaded_at: val.uploadedAt,
+      };
+    }).filter(Boolean);
+
     const res = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,6 +64,7 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         requestorContact: data.requestorInfo.contactNumber,
         requestorEmail: data.requestorInfo.email,
         purpose: data.requestorInfo.purpose,
+        documents,
       }),
     });
 
