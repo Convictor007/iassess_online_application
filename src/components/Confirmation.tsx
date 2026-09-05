@@ -1,14 +1,12 @@
 import type { ApplicationData } from '../types';
-import type { PaymentResult } from './Payment';
 import { CATEGORY_LABELS } from '../data/transactions';
 
 interface ConfirmationProps {
   data: ApplicationData;
-  paymentResult: PaymentResult | null;
   onNewApplication: () => void;
 }
 
-export default function Confirmation({ data, paymentResult: _paymentResult, onNewApplication }: ConfirmationProps) {
+export default function Confirmation({ data, onNewApplication }: ConfirmationProps) {
   return (
     <div className="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-lg min-h-[400px]">
       {/* Left Panel - Blue */}
@@ -90,8 +88,8 @@ export default function Confirmation({ data, paymentResult: _paymentResult, onNe
         </p>
 
         <p className="text-xs text-gray-600 mb-6 leading-relaxed">
-          We appreciate you for using the Municipality of Balatan Assessor&apos;s Online Application,
-          and we are eager to review your application.
+          Please visit the Municipal Assessor&apos;s Office with your complete physical documents
+          to proceed with your application.
         </p>
 
         <div className="mt-auto">

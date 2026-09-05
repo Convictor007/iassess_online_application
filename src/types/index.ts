@@ -11,34 +11,6 @@ export type CertificationType =
   | 'certified_true_copy'
   | 'cert_land_holdings';
 
-export type SubmissionMethod = 'walk_in' | 'online';
-
-export type DocumentType =
-  | 'deed_of_sale'
-  | 'title'
-  | 'tax_declaration'
-  | 'technical_description'
-  | 'valid_id'
-  | 'spa'
-  | 'survey_plan'
-  | 'cenro_certification'
-  | 'affidavit_ownership'
-  | 'affidavit_possession'
-  | 'barangay_cert_possessor'
-  | 'purpose_letter';
-
-export interface UploadedDocument {
-  fileName: string;
-  fileUrl: string;
-  uploadedAt: string;
-}
-
-export interface PendingDocument {
-  file: File;
-  previewUrl: string;
-  addedAt: string;
-}
-
 export interface CertificateItem {
   id: CertificationType;
   label: string;
@@ -72,9 +44,6 @@ export interface ApplicationData {
   transactionCategory: TransactionCategory | null;
   assessmentType: AssessmentType | null;
   certificationSelections: CertificationSelection[];
-  submissionMethod: SubmissionMethod | null;
-  documents: Partial<Record<DocumentType, PendingDocument>>;
-  uploadedDocuments: Partial<Record<DocumentType, UploadedDocument>>;
   propertyInfo: PropertyInfo;
   requestorInfo: RequestorInfo;
   privacyConsent: boolean;
@@ -88,10 +57,7 @@ export type Step =
   | 'assessment_type'
   | 'certification_type'
   | 'requirements'
-  | 'submission_method'
-  | 'document_upload'
   | 'property_info'
   | 'requestor_info'
   | 'summary'
-  | 'payment'
   | 'confirmation';

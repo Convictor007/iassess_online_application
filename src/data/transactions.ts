@@ -2,8 +2,8 @@ import type { CertificateItem, AssessmentType, TransactionCategory } from '../ty
 import type { DocumentGuide } from '../components/DocumentGuideModal';
 
 export const CERTIFICATES: CertificateItem[] = [
-  { id: 'certified_true_copy', label: 'Certified True Copy of Tax Declaration', fee: 50 },
-  { id: 'cert_land_holdings', label: 'Certificate of Landholdings', fee: 50 },
+  { id: 'certified_true_copy', label: 'Certified True Copy of Tax Declaration', fee: 75 },
+  { id: 'cert_land_holdings', label: 'Certificate of Landholdings', fee: 75 },
 ];
 
 export const BARANGAYS = [
@@ -37,42 +37,77 @@ export const CATEGORY_LABELS: Record<TransactionCategory, string> = {
   certification: 'Certification Request',
 };
 
-export const REQUIREMENTS: Record<AssessmentType, { copies: number; label: string; guide?: string }[]> = {
+// Based on Citizen Charter — requirements include where to get each document
+export const REQUIREMENTS: Record<AssessmentType, { copies: number; label: string; whereToGet: string; guide?: string }[]> = {
   transfer_ownership: [
-    { copies: 1, label: 'Electronic Copy of Title', guide: 'Get from the Registry of Deeds (ROD) Naga City. Request a certified true copy of the title. Bring a valid ID and pay the certification fee.' },
-    { copies: 3, label: 'Document(s) — Sale, Donation, Segregation, Extra Judicial Settlement, etc. (Certified copy from ROD)', guide: 'Obtain from the Registry of Deeds (ROD) Naga City. Request a certified true copy of the deed (sale, donation, etc.). Ensure the document is annotated and registered.' },
-    { copies: 3, label: 'Latest Tax Declaration subject for transfer (Masso)', guide: 'Request from the Municipal Assessor\'s Office (Masso), Balatan. Ask for the latest tax declaration under the seller\'s name for the property being transferred.' },
-    { copies: 3, label: 'Payment of Transfer Tax (1/2 of 1% of Fair Market Value or consideration, whichever is higher — at PTO)', guide: 'Pay at the Provincial Treasurer\'s Office (PTO). The amount is 0.5% of the Fair Market Value or the sale price, whichever is higher. Bring the tax declaration and deed of sale.' },
-    { copies: 3, label: 'Certificate of Tax Payment (current year and previous year — from MTO)', guide: 'Request from the Municipal Treasurer\'s Office (MTO), Balatan. You need the certificate for both the current year and the previous year. Bring the tax declaration and proof of payment.' },
-    { copies: 3, label: 'Authenticated Xerox copy of Certificate Authorizing Registration (CAR) from BIR', guide: 'Get from the Bureau of Internal Revenue (BIR) Naga City. File for a CAR after paying the Capital Gains Tax. Request an authenticated copy of the CAR.' },
-    { copies: 1, label: 'Special Power of Attorney (SPA) — if transacting person is not a party to the transaction', guide: 'Have the SPA prepared and notarized by a Notary Public. The SPA must specifically authorize the representative to process the transfer of ownership at the Municipal Assessor\'s Office.' },
+    { copies: 1, label: 'Electronic Copy of Title', whereToGet: 'Registry of Deeds (ROD) — Naga City', guide: 'Request a certified true copy of the title. Bring a valid ID and pay the certification fee. Fee: ₱20-₱50 per page. Processing: 1-3 working days.' },
+    { copies: 3, label: 'Document(s) — Sale, Donation, Segregation, Extra Judicial Settlement, etc. (Certified copy from ROD)', whereToGet: 'Registry of Deeds (ROD) — Naga City', guide: 'Request a certified true copy of the deed. Ensure the document is annotated and registered. Fee: ₱20-₱50 per page. Processing: 1-3 working days.' },
+    { copies: 3, label: 'Latest Tax Declaration subject for transfer', whereToGet: 'Municipal Assessor\'s Office (MASO) — Balatan', guide: 'Request from the Municipal Hall of Balatan. Ask for the latest tax declaration under the seller\'s name. Fee: Free. Processing: Same day.' },
+    { copies: 3, label: 'Payment of Transfer Tax (½ of 1% of Fair Market Value or consideration, whichever is higher)', whereToGet: 'Provincial Treasurer\'s Office (PTO) — Pili, Camarines Sur', guide: 'Pay at the Provincial Capitol Compound. Amount = 0.5% × higher of (FMV or sale price). Bring tax declaration and deed of sale. Fee: 0.5% of FMV. Processing: Same day.' },
+    { copies: 3, label: 'Certificate of Tax Payment (current year and previous year)', whereToGet: 'Municipal Treasurer\'s Office (MTO) — Balatan', guide: 'Request from the Municipal Hall of Balatan. Ensure all previous years\' taxes are fully paid. Fee: Minimal. Processing: Same day.' },
+    { copies: 3, label: 'Authenticated Xerox copy of Certificate Authorizing Registration (CAR) from BIR', whereToGet: 'Bureau of Internal Revenue (BIR) — Naga City', guide: 'File for CAR after paying Capital Gains Tax (6% of sale price). Processing: 5-10 working days. Start this early — it\'s the most time-consuming document.' },
+    { copies: 1, label: 'Special Power of Attorney (SPA) — if transacting person is not a party to the transaction', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Have the SPA prepared and notarized. Must specifically authorize the representative to process the transfer at the Municipal Assessor\'s Office. Fee: ₱100-₱300. Processing: Same day.' },
   ],
   transfer_handog: [
-    { copies: 3, label: 'Document(s) — Certified True Copy (Sale, Donation, Segregation, Extra Judicial Settlement, etc.)', guide: 'Obtain from the Registry of Deeds (ROD) Naga City. Request a certified true copy of the deed. For Handog Titulo (DENR-issued), ensure the document is properly registered.' },
-    { copies: 3, label: 'Latest Tax Declaration subject for transfer (Masso)', guide: 'Request from the Municipal Assessor\'s Office (Masso), Balatan. Ask for the latest tax declaration under the seller\'s name.' },
-    { copies: 3, label: 'Payment of Transfer Tax (1/2 of 1% of Fair Market Value or consideration, whichever is higher — at PTO)', guide: 'Pay at the Provincial Treasurer\'s Office (PTO). The amount is 0.5% of the Fair Market Value or the sale price, whichever is higher.' },
-    { copies: 3, label: 'Certificate of Tax Payment (current year and previous year — from MTO)', guide: 'Request from the Municipal Treasurer\'s Office (MTO), Balatan. Obtain certificates for the current and previous year.' },
-    { copies: 1, label: 'Electronic Copy of Title (from ROD Naga City)', guide: 'Get from the Registry of Deeds (ROD) Naga City. Request the electronic copy of the DENR-issued title (Handog Titulo).' },
-    { copies: 1, label: 'Special Power of Attorney (SPA) — if transacting person is not a party to the transaction', guide: 'Have the SPA prepared and notarized by a Notary Public. Must specifically authorize the representative for this transaction.' },
+    { copies: 3, label: 'Document(s) — Certified True Copy (Sale, Donation, Segregation, Extra Judicial Settlement, etc.)', whereToGet: 'Registry of Deeds (ROD) — Naga City', guide: 'Request a certified true copy of the deed. For Handog Titulo (DENR-issued), ensure the document is properly registered. Fee: ₱20-₱50 per page.' },
+    { copies: 3, label: 'Latest Tax Declaration subject for transfer', whereToGet: 'Municipal Assessor\'s Office (MASO) — Balatan', guide: 'Request from the Municipal Hall of Balatan. Fee: Free. Processing: Same day.' },
+    { copies: 3, label: 'Payment of Transfer Tax (½ of 1% of Fair Market Value or consideration, whichever is higher)', whereToGet: 'Provincial Treasurer\'s Office (PTO) — Pili, Camarines Sur', guide: 'Pay at the Provincial Capitol Compound. Fee: 0.5% of FMV. Processing: Same day.' },
+    { copies: 3, label: 'Certificate of Tax Payment (current year and previous year)', whereToGet: 'Municipal Treasurer\'s Office (MTO) — Balatan', guide: 'Request from the Municipal Hall of Balatan. Fee: Minimal. Processing: Same day.' },
+    { copies: 1, label: 'Electronic Copy of Title (ROD Naga City)', whereToGet: 'Registry of Deeds (ROD) — Naga City', guide: 'Request the electronic copy of the DENR-issued title (Handog Titulo). Fee: ₱20-₱50 per page. Processing: 1-3 working days.' },
+    { copies: 1, label: 'Special Power of Attorney (SPA) — if transacting person is not a party to the transaction', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Have the SPA prepared and notarized. Fee: ₱100-₱300. Processing: Same day.' },
   ],
   land_first_time: [
-    { copies: 1, label: 'Survey Plan prepared by a licensed Geodetic Engineer, approved by LMB-DENR or Cadastral Map certified by DENR', guide: 'Hire a licensed Geodetic Engineer to prepare a survey plan. Submit to the Land Management Bureau (LMB) of DENR for approval, or obtain a Cadastral Map certified by DENR.' },
-    { copies: 1, label: 'Certification from CENRO stating the land is within the alienable and disposable area', guide: 'Request from the Community Environment and Natural Resources Office (CENRO), Iriga City. Bring the survey plan and any proof of possession. Processing may take several days.' },
-    { copies: 1, label: 'Affidavit of Ownership and/or Sworn Statement declaring Market Value of Real Property', guide: 'Prepare and have it notarized by a Notary Public. The affidavit must declare the market value of the property and the applicant\'s ownership claim.' },
-    { copies: 1, label: 'Affidavit of long, continuous and notorious possession of the property', guide: 'Prepare and have it notarized by a Notary Public. State the duration and nature of your possession of the property.' },
-    { copies: 1, label: 'Certification from the Barangay Captain that declarant is the present possessor and occupant', guide: 'Request from the Barangay Hall where the property is located. The Barangay Captain must certify that you are the current possessor and occupant of the land.' },
-    { copies: 1, label: 'Certification of Adjoining Owners, duly sworn by the Barangay Captain or Municipal Mayor', guide: 'Get certifications from the owners of adjacent lots. Have these sworn before the Barangay Captain or Municipal Mayor.' },
-    { copies: 1, label: 'Ocular Inspection/Investigation Report by the Assessor or authorized representative', guide: 'This will be conducted by the Municipal Assessor\'s Office after you file your application. An assessor will visit the property for inspection.' },
-    { copies: 1, label: 'Special Power of Attorney (SPA) — if transacting person is not a party to the transaction', guide: 'Have the SPA prepared and notarized by a Notary Public. Must specifically authorize the representative for this transaction.' },
+    { copies: 1, label: 'Survey Plan prepared by a licensed Geodetic Engineer, approved by LMB-DENR or Cadastral Map certified by DENR', whereToGet: 'Licensed Geodetic Engineer + DENR-LMB', guide: 'Hire a licensed Geodetic Engineer. Submit to DENR for approval. Fee: ₱5,000-₱15,000 (varies by lot size). Processing: 2-4 weeks.' },
+    { copies: 1, label: 'Certification from CENRO stating the land is within the alienable and disposable area', whereToGet: 'CENRO — Iriga City', guide: 'Bring the survey plan and proof of possession. Processing: 3-7 working days.' },
+    { copies: 1, label: 'Affidavit of Ownership and/or Sworn Statement declaring Market Value of Real Property', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Prepare and have it notarized. Fee: ₱100-₱300. Processing: Same day.' },
+    { copies: 1, label: 'Affidavit of long, continuous and notorious possession of the property', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Prepare and have it notarized. Fee: ₱100-₱300. Processing: Same day.' },
+    { copies: 1, label: 'Certification from the Barangay Captain that declarant is the present possessor and occupant', whereToGet: 'Barangay Hall — where the property is located', guide: 'Request from the Barangay Captain. Fee: Minimal. Processing: 1-3 days.' },
+    { copies: 1, label: 'Certification of Adjoining Owners, duly sworn by the Barangay Captain or Municipal Mayor', whereToGet: 'Barangay Hall or Municipal Hall — Balatan', guide: 'Get certifications from adjacent lot owners. Have these sworn before the Barangay Captain or Municipal Mayor. Fee: Minimal. Processing: 1-3 days.' },
+    { copies: 1, label: 'Ocular Inspection/Investigation Report by the Assessor or authorized representative', whereToGet: 'Municipal Assessor\'s Office (MASO) — Balatan', guide: 'This is conducted AFTER your application is filed. An assessor will visit the property. Fee: None. Processing: 1-2 weeks after filing.' },
+    { copies: 1, label: 'Special Power of Attorney (SPA) — if transacting person is not a party to the transaction', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Have the SPA prepared and notarized. Fee: ₱100-₱300. Processing: Same day.' },
   ],
 };
 
-export const CERT_REQUIREMENTS: { copies: number; label: string; guide?: string }[] = [
-  { copies: 1, label: 'Photocopy of Valid I.D. of the Owner', guide: 'Prepare a photocopy of any valid government-issued ID of the registered property owner (e.g., Passport, Driver\'s License, PhilSys ID, SSS ID).' },
-  { copies: 1, label: 'Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs — per RA 10173 (Data Privacy Act of 2012)', guide: 'Have the SPA prepared and notarized by a Notary Public. Required under RA 10173 (Data Privacy Act of 2012). Must authorize the requestor to obtain copies of the Tax Declaration.' },
-  { copies: 1, label: 'Purpose of request must be indicated', guide: 'Write the purpose of your request in a letter or in the application form (e.g., "for bank loan", "for insurance", "for personal records", etc.).' },
-  { copies: 1, label: 'Photocopy of Valid I.D. of Requestor', guide: 'Prepare a photocopy of any valid government-issued ID of the person transacting/requesting (may be different from the owner if using SPA).' },
+export const CERT_REQUIREMENTS: { copies: number; label: string; whereToGet: string; guide?: string }[] = [
+  { copies: 1, label: 'Photocopy of Valid I.D. of the Owner', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Any valid government-issued ID (Passport, Driver\'s License, PhilSys ID, SSS ID, etc.). Fee: ₱1-₱5.' },
+  { copies: 1, label: 'Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs — per RA 10173 (Data Privacy Act of 2012)', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Required under RA 10173. Must authorize the requestor to obtain copies of the Tax Declaration. Fee: ₱100-₱300. Processing: Same day.' },
+  { copies: 1, label: 'Purpose of request must be indicated', whereToGet: 'Self-prepared', guide: 'Write the purpose (e.g., "for bank loan", "for insurance", "for personal records"). Include in the application form.' },
+  { copies: 1, label: 'Photocopy of Valid I.D. of Requestor', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Separate from the owner\'s ID. Even if you are the owner, you need your own ID photocopy. Fee: ₱1-₱5.' },
 ];
+
+// Step-by-step guides for the citizen charter process
+export const CITIZEN_CHARTER_PROCESS = {
+  transfer_ownership: {
+    title: 'Transfer of Ownership — Walk-in Process',
+    steps: [
+      { step: 1, client: 'Submit requirements to Personnel in charge', agency: 'Receives and reviews document and requirements', time: '15-30 minutes', responsible: 'Jovito I. Cuarto (Mun. Assessor), Francisco M. Pacer (Admin. Aide IV), Edith N. Cuarto (Admin. Aide IV)' },
+      { step: 2, client: 'Wait for the prescribed period until you receive the FAAS/TD', agency: 'Prepare and sign FAAS/TD; submit to Provincial Assessor for approval', time: '15-30 minutes + 15 working days (provincial approval)', responsible: 'Jovito I. Cuarto (Mun. Assessor), Provincial Assessor' },
+      { step: 3, client: 'Receive approved FAAS/TD', agency: 'Release approved FAAS/TD', time: '5 minutes', responsible: 'Jovito I. Cuarto (Mun. Assessor), Francisco M. Pacer (Admin. Aide IV), Edith N. Cuarto (Admin. Aide IV)' },
+    ],
+    totalProcessingTime: '15 working days',
+    fee: 'NONE',
+  },
+  transfer_handog: {
+    title: 'Transfer of Ownership (Handog Titulo) — Walk-in Process',
+    steps: [
+      { step: 1, client: 'Submit requirements to Personnel in charge', agency: 'Receives and reviews document and requirements', time: '15-30 minutes', responsible: 'Jovito I. Cuarto (Mun. Assessor), Francisco M. Pacer (Admin. Aide IV), Edith N. Cuarto (Admin. Aide IV)' },
+      { step: 2, client: 'Wait for the prescribed period until you receive the FAAS/TD', agency: 'Prepare and sign FAAS/TD; submit to Provincial Assessor for approval', time: '15-30 minutes + 15 working days (provincial approval)', responsible: 'Jovito I. Cuarto (Mun. Assessor), Provincial Assessor' },
+      { step: 3, client: 'Receive approved FAAS/TD', agency: 'Release approved FAAS/TD', time: '5 minutes', responsible: 'Jovito I. Cuarto (Mun. Assessor), Francisco M. Pacer (Admin. Aide IV), Edith N. Cuarto (Admin. Aide IV)' },
+    ],
+    totalProcessingTime: '15 working days',
+    fee: 'NONE',
+  },
+  land_first_time: {
+    title: 'Appraisal of Land (First Time) — Walk-in Process',
+    steps: [
+      { step: 1, client: 'Submit requirements to Personnel in charge', agency: 'Receives and reviews document and requirement', time: '15-30 minutes', responsible: 'Jovito I. Cuarto (Mun. Assessor), Francisco M. Pacer (Admin. Aide IV), Edith N. Cuarto (Admin. Aide IV)' },
+      { step: 2, client: 'Wait for the prescribed period until you receive the FAAS/TD', agency: 'Prepare and sign FAAS/TD; submit to Provincial Assessor for approval', time: '15-30 minutes + 15 working days (provincial approval)', responsible: 'Jovito I. Cuarto (Mun. Assessor), Provincial Assessor' },
+      { step: 3, client: 'Receive approved FAAS/TD', agency: 'Release approved FAAS/TD', time: '5 minutes', responsible: 'Jovito I. Cuarto (Mun. Assessor), Francisco M. Pacer (Admin. Aide IV), Edith N. Cuarto (Admin. Aide IV)' },
+    ],
+    totalProcessingTime: '16 working days',
+    fee: 'NONE',
+  },
+};
 
 // Detailed step-by-step guides for each document
 export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
@@ -120,7 +155,7 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
     tips: 'If you don\'t have the document details, bring the Tax Declaration number and the owner\'s name — the ROD can search their records.',
   },
 
-  'Latest Tax Declaration subject for transfer (Masso)': {
+  'Latest Tax Declaration subject for transfer': {
     title: 'How to Get Latest Tax Declaration',
     office: 'Municipal Assessor\'s Office (MASO) — Balatan',
     location: 'Municipal Hall of Balatan, Poblacion (Siramag), Balatan, Camarines Sur',
@@ -141,7 +176,7 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
     tips: 'Go early in the morning to avoid long queues. The MASO is open Monday to Friday, 8:00 AM to 5:00 PM.',
   },
 
-  'Payment of Transfer Tax (1/2 of 1% of Fair Market Value or consideration, whichever is higher — at PTO)': {
+  'Payment of Transfer Tax (½ of 1% of Fair Market Value or consideration, whichever is higher)': {
     title: 'How to Pay Transfer Tax',
     office: 'Provincial Treasurer\'s Office (PTO) — Camarines Sur',
     location: 'Provincial Capitol Compound, Pili, Camarines Sur (approx. 25 km from Balatan)',
@@ -163,7 +198,7 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
     tips: 'Compute the transfer tax before going to save time. If the FMV from the Tax Declaration is outdated, the assessor may require a new valuation.',
   },
 
-  'Certificate of Tax Payment (current year and previous year — from MTO)': {
+  'Certificate of Tax Payment (current year and previous year)': {
     title: 'How to Get Certificate of Tax Payment',
     office: 'Municipal Treasurer\'s Office (MTO) — Balatan',
     location: 'Municipal Hall of Balatan, Poblacion (Siramag), Balatan, Camarines Sur',

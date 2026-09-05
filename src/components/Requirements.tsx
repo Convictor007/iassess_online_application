@@ -7,6 +7,7 @@ import type { DocumentGuide } from './DocumentGuideModal';
 interface RequirementItem {
   copies: number;
   label: string;
+  whereToGet?: string;
   guide?: string;
 }
 
@@ -16,7 +17,6 @@ interface RequirementsProps {
   note?: string;
   onBack: () => void;
   onNext: () => void;
-  downloadLinks?: { label: string; url: string }[];
 }
 
 export default function Requirements({
@@ -25,7 +25,6 @@ export default function Requirements({
   note,
   onBack,
   onNext,
-  downloadLinks,
 }: RequirementsProps) {
   const [activeGuide, setActiveGuide] = useState<DocumentGuide | null>(null);
 
@@ -62,6 +61,12 @@ export default function Requirements({
                         </button>
                       )}
                     </div>
+                    {req.whereToGet && (
+                      <p className="text-[10px] text-blue-600 font-medium mt-1 ml-0">
+                        <i className="bi bi-geo-alt-fill mr-1"></i>
+                        {req.whereToGet}
+                      </p>
+                    )}
                     {req.guide && (
                       <p className="text-[10px] text-gray-500 mt-1 ml-0 leading-relaxed">
                         {req.guide}
@@ -74,24 +79,6 @@ export default function Requirements({
           })}
         </ul>
       </div>
-
-      {downloadLinks && downloadLinks.length > 0 && (
-        <div className="mb-2">
-          <div className="flex flex-wrap gap-1.5">
-            {downloadLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-[#0072D2] rounded text-[11px] hover:bg-blue-200 transition-colors"
-              >
-                <i className="bi bi-file-earmark-arrow-down"></i> {link.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
 
       {note && (
         <p className="text-[11px] text-red-600 font-medium">

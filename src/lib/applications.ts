@@ -2,7 +2,6 @@ import type { ApplicationData } from '../types';
 
 /**
  * Matches the shape returned by getFullTransaction() in repository.mjs.
- * The API returns a flat joined object from transactions + properties + requestors + assessments.
  */
 export interface ApplicationRecord {
   id: number;
@@ -13,36 +12,30 @@ export interface ApplicationRecord {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  // from assessments (nullable)
   assessment_type: string | null;
-  // from properties (nullable)
   owner_name: string | null;
   title_no: string | null;
   lot_no: string | null;
   block_no: string | null;
   street_name: string | null;
   barangay: string | null;
-  // from requestors (nullable)
   requestor_name: string | null;
   requestor_address: string | null;
   requestor_contact: string | null;
   requestor_email: string | null;
   purpose: string | null;
+  documents?: Array<{
+    id: number;
+    doc_type: string;
+    file_name: string;
+    file_url: string;
+    mime_type: string | null;
+    uploaded_at: string;
+  }>;
 }
 
 export async function submitApplication(data: ApplicationData): Promise<{ referenceNumber: string; error?: string }> {
   try {
-    // Build documents array from uploaded blob URLs
-    const documents = Object.entries(data.uploadedDocuments || {}).map(([docType, val]) => {
-      if (!val) return null;
-      return {
-        doc_type: docType,
-        file_name: val.fileName,
-        file_url: val.fileUrl,
-        uploaded_at: val.uploadedAt,
-      };
-    }).filter(Boolean);
-
     const res = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,7 +44,7 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
         certificationSelections: data.certificationSelections,
-        submissionMethod: data.submissionMethod,
+        submissionMethod: 'walk_in',
         ownerName: data.propertyInfo.ownerName,
         taxDeclarations: data.propertyInfo.taxDeclarations.filter(td => td.trim()),
         titleNo: data.propertyInfo.titleNo || null,
@@ -64,7 +57,6 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         requestorContact: data.requestorInfo.contactNumber,
         requestorEmail: data.requestorInfo.email,
         purpose: data.requestorInfo.purpose,
-        documents,
       }),
     });
 
@@ -123,8 +115,7 @@ export async function sendConfirmationEmail(data: ApplicationData): Promise<{ su
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
         certificationSelections: data.certificationSelections,
-        submissionMethod: data.submissionMethod,
-        documents: data.uploadedDocuments ?? {},
+        submissionMethod: 'walk_in',
         requestorName: data.requestorInfo.name,
         requestorEmail: data.requestorInfo.email,
         requestorContact: data.requestorInfo.contactNumber,
