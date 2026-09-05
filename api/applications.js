@@ -80,8 +80,8 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ success: true, referenceNumber, id: trnId });
     } catch (err) {
-      console.error("POST /api/applications error:", err);
-      return res.status(500).json({ error: "Failed to submit application" });
+      console.error("POST /api/applications error:", err?.message, err?.stack);
+      return res.status(500).json({ error: "Failed to submit application", detail: err?.message });
     }
   }
 
@@ -108,8 +108,8 @@ export default async function handler(req, res) {
       const rows = await listTransactions({ status, search });
       return res.status(200).json({ success: true, data: rows || [] });
     } catch (err) {
-      console.error("GET /api/applications error:", err);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error("GET /api/applications error:", err?.message, err?.stack);
+      return res.status(500).json({ error: "Internal server error", detail: err?.message });
     }
   }
 
@@ -137,8 +137,8 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ success: true });
     } catch (err) {
-      console.error("PATCH /api/applications error:", err);
-      return res.status(500).json({ error: "Failed to update application" });
+      console.error("PATCH /api/applications error:", err?.message, err?.stack);
+      return res.status(500).json({ error: "Failed to update application", detail: err?.message });
     }
   }
 
