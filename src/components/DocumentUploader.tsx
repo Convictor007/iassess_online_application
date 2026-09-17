@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import type { DocumentType, PendingDocument } from '../types';
 
 interface DocumentUploaderProps {
@@ -34,6 +34,7 @@ export default function DocumentUploader({
 }: DocumentUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [previewFile, setPreviewFile] = useState<PendingDocument | null>(null);
 
   const canAddMore = files.length < maxFiles;
 
@@ -87,39 +88,28 @@ export default function DocumentUploader({
 
       {/* Uploaded files */}
       {files.length > 0 && (
-        <div className="space-y-2 mb-2">
+        <div className="space-y-1.5 mb-2">
           {files.map((file, index) => {
             const isImg = isImage(file.file.type);
             return (
-              <div key={index} className="border border-green-200 bg-green-50 rounded-lg overflow-hidden">
-                <div className="relative bg-gray-100" style={{ height: 120 }}>
-                  {isImg ? (
-                    <img
-                      src={file.previewUrl}
-                      alt={file.file.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full py-2 px-2">
-                      <i className="bi bi-file-earmark-text text-2xl text-gray-400 mb-1"></i>
-                      <span className="text-[10px] text-gray-500 text-center leading-tight px-2">{file.file.name}</span>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => onRemove(index)}
-                    className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-sm"
-                    title="Remove file"
-                  >
-                    <i className="bi bi-x text-xs"></i>
-                  </button>
+              <div
+                key={index}
+                className="flex items-center gap-2 border border-green-200 bg-green-50 rounded-lg px-2.5 py-2 cursor-pointer hover:bg-green-100 transition-colors"
+                onClick={() => setPreviewFile(file)}
+              >
+                <i className={`bi ${isImg ? 'bi-image' : 'bi-file-earmark-text'} text-green-600 text-sm shrink-0`}></i>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-800 truncate">{file.file.name}</div>
+                  <div className="text-[10px] text-gray-500">{formatFileSize(file.file.size)}</div>
                 </div>
-                <div className="px-2 py-1.5 flex items-center gap-1.5">
-                  <i className="bi bi-check-circle-fill text-green-600 text-xs shrink-0"></i>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-medium text-gray-800 truncate">{file.file.name}</div>
-                    <div className="text-[10px] text-gray-500">{formatFileSize(file.file.size)}</div>
-                  </div>
-                </div>
+                <i className="bi bi-eye text-gray-400 text-xs shrink-0"></i>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onRemove(index); }}
+                  className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-sm shrink-0"
+                  title="Remove file"
+                >
+                  <i className="bi bi-x text-xs"></i>
+                </button>
               </div>
             );
           })}
@@ -180,6 +170,48 @@ export default function DocumentUploader({
         onChange={handleFileInput}
         className="hidden"
       />
+
+      {/* File Preview Modal */}
+      {previewFile && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewFile(null)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <div className="flex items-center gap-2 min-w-0">
+                <i className={`bi ${isImage(previewFile.file.type) ? 'bi-image' : 'bi-file-earmark-text'} text-blue-600`}></i>
+                <span className="text-sm font-medium text-gray-800 truncate">{previewFile.file.name}</span>
+                <span className="text-xs text-gray-400 shrink-0">{formatFileSize(previewFile.file.size)}</span>
+              </div>
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 shrink-0"
+              >
+                <i className="bi bi-x-lg text-gray-500"></i>
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50">
+              {isImage(previewFile.file.type) ? (
+                <img
+                  src={previewFile.previewUrl}
+                  alt={previewFile.file.name}
+                  className="max-w-full max-h-[70vh] object-contain rounded"
+                />
+              ) : (
+                <iframe
+                  src={previewFile.previewUrl}
+                  className="w-full h-[70vh] rounded border border-gray-200"
+                  title={previewFile.file.name}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
