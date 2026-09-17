@@ -43,13 +43,15 @@ const CERTIFICATION_DOCUMENTS: DocumentConfig[] = [
   { type: 'purpose_letter', label: 'Purpose of request must be indicated', required: true },
 ];
 
+const MAX_FILES_PER_TYPE = 3;
+
 interface DocumentUploadProps {
   transactionCategory: 'assessment' | 'certification';
   assessmentType: AssessmentType | null;
   certificationSelections: Array<{ type: CertificationType; copies: number }>;
-  documents: Partial<Record<DocumentType, PendingDocument>>;
+  documents: Partial<Record<DocumentType, PendingDocument[]>>;
   onDocumentAdd: (type: DocumentType, doc: PendingDocument) => void;
-  onDocumentRemove: (type: DocumentType) => void;
+  onDocumentRemove: (type: DocumentType, index: number) => void;
   onBack: () => void;
   onNext: () => void;
 }
@@ -68,7 +70,7 @@ export default function DocumentUpload({
     : CERTIFICATION_DOCUMENTS;
 
   const requiredCount = docs.filter(d => d.required).length;
-  const uploadedCount = docs.filter(d => d.required && documents[d.type]).length;
+  const uploadedCount = docs.filter(d => d.required && documents[d.type] && documents[d.type]!.length > 0).length;
   const allRequiredUploaded = uploadedCount === requiredCount;
 
   const title = transactionCategory === 'assessment' && assessmentType
@@ -79,7 +81,7 @@ export default function DocumentUpload({
     <div>
       <h2 className="text-base font-bold text-gray-800 mb-1">{title}</h2>
       <p className="text-[11px] text-gray-500 mb-3">
-        Upload clear photos or scans of your required documents.
+        Upload clear photos or scans of your required documents. You can upload up to {MAX_FILES_PER_TYPE} files per document type.
       </p>
 
       {/* Progress indicator */}
@@ -109,24 +111,28 @@ export default function DocumentUpload({
         <div className="flex items-start gap-2">
           <i className="bi bi-info-circle-fill text-blue-600 mt-0.5 shrink-0"></i>
           <div className="text-xs text-blue-800">
-            <strong>Files are stored locally.</strong> They will be uploaded to the server only when you submit your application. You can remove or replace files before submitting.
+            <strong>Files are stored locally.</strong> They will be uploaded to the server only when you submit your application. You can remove or replace files before submitting. Up to {MAX_FILES_PER_TYPE} files per document type.
           </div>
         </div>
       </div>
 
       {/* Document uploaders */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        {docs.map((doc) => (
-          <DocumentUploader
-            key={doc.type}
-            documentType={doc.type}
-            label={doc.label}
-            required={doc.required}
-            pending={documents[doc.type] ?? null}
-            onAdd={(d) => onDocumentAdd(doc.type, d)}
-            onRemove={() => onDocumentRemove(doc.type)}
-          />
-        ))}
+        {docs.map((doc) => {
+          const files = documents[doc.type] ?? [];
+          return (
+            <DocumentUploader
+              key={doc.type}
+              documentType={doc.type}
+              label={doc.label}
+              required={doc.required}
+              files={files}
+              maxFiles={MAX_FILES_PER_TYPE}
+              onAdd={(d) => onDocumentAdd(doc.type, d)}
+              onRemove={(index) => onDocumentRemove(doc.type, index)}
+            />
+          );
+        })}
       </div>
 
       {!allRequiredUploaded && (

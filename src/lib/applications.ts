@@ -45,15 +45,15 @@ export interface ApplicationRecord {
 
 export async function submitApplication(data: ApplicationData): Promise<{ referenceNumber: string; error?: string }> {
   try {
-    const documents = Object.entries(data.uploadedDocuments || {}).map(([docType, val]) => {
-      if (!val) return null;
-      return {
+    const documents = Object.entries(data.uploadedDocuments || {}).flatMap(([docType, files]) => {
+      if (!files || !Array.isArray(files)) return [];
+      return files.map((f) => ({
         doc_type: docType,
-        file_name: val.fileName,
-        file_url: val.fileUrl,
-        uploaded_at: val.uploadedAt,
-      };
-    }).filter(Boolean);
+        file_name: f.fileName,
+        file_url: f.fileUrl,
+        uploaded_at: f.uploadedAt,
+      }));
+    });
 
     const res = await fetch('/api/applications', {
       method: 'POST',

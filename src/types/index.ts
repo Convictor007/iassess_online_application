@@ -73,8 +73,8 @@ export interface ApplicationData {
   assessmentType: AssessmentType | null;
   certificationSelections: CertificationSelection[];
   submissionMethod: SubmissionMethod | null;
-  documents: Partial<Record<DocumentType, PendingDocument>>;
-  uploadedDocuments: Partial<Record<DocumentType, UploadedDocument>>;
+  documents: Partial<Record<DocumentType, PendingDocument[]>>;
+  uploadedDocuments: Partial<Record<DocumentType, UploadedDocument[]>>;
   propertyInfo: PropertyInfo;
   requestorInfo: RequestorInfo;
   privacyConsent: boolean;

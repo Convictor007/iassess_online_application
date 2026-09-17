@@ -226,17 +226,26 @@ export default function App() {
             transactionCategory={data.transactionCategory!}
             assessmentType={data.assessmentType}
             certificationSelections={data.certificationSelections}
-            documents={data.documents as Partial<Record<DocumentType, PendingDocument>>}
+            documents={data.documents as Partial<Record<DocumentType, PendingDocument[]>>}
             onDocumentAdd={(type: DocumentType, doc: PendingDocument) =>
-              setData((d) => ({ ...d, documents: { ...d.documents, [type]: doc } }))
-            }
-            onDocumentRemove={(type: DocumentType) =>
               setData((d) => {
-                const docs = { ...d.documents };
-                if (docs[type]?.previewUrl) {
-                  URL.revokeObjectURL(docs[type]!.previewUrl);
+                const existing = d.documents[type] ?? [];
+                return { ...d, documents: { ...d.documents, [type]: [...existing, doc] } };
+              })
+            }
+            onDocumentRemove={(type: DocumentType, index: number) =>
+              setData((d) => {
+                const existing = d.documents[type] ?? [];
+                if (existing[index]?.previewUrl) {
+                  URL.revokeObjectURL(existing[index].previewUrl);
                 }
-                delete docs[type];
+                const updated = existing.filter((_, i) => i !== index);
+                const docs = { ...d.documents };
+                if (updated.length === 0) {
+                  delete docs[type];
+                } else {
+                  docs[type] = updated;
+                }
                 return { ...d, documents: docs };
               })
             }

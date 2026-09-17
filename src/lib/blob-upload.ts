@@ -127,16 +127,16 @@ export async function uploadDocumentToBlob(
 }
 
 export async function uploadAllDocuments(
-  documents: Partial<Record<DocumentType, PendingDocument>>,
+  documents: Partial<Record<DocumentType, PendingDocument[]>>,
   applicationId: string,
   onDocumentProgress?: (documentType: DocumentType, progress: UploadProgress) => void,
-): Promise<{ uploaded: Partial<Record<DocumentType, UploadedDocument>>; errors: string[] }> {
-  const uploaded: Partial<Record<DocumentType, UploadedDocument>> = {};
+): Promise<{ uploaded: Partial<Record<DocumentType, UploadedDocument[]>>; errors: string[] }> {
+  const uploaded: Partial<Record<DocumentType, UploadedDocument[]>> = {};
   const errors: string[] = [];
 
-  const entries = Object.entries(documents) as [DocumentType, PendingDocument][];
+  const entries = Object.entries(documents) as [DocumentType, PendingDocument[]][];
 
-  for (const [docType, pending] of entries) {
+  for (const [docType, pendingFiles] of entries) {
     onDocumentProgress?.(docType, {
       documentType: docType,
       progress: 0,
@@ -144,15 +144,19 @@ export async function uploadAllDocuments(
     });
 
     try {
-      const result = await uploadDocumentToBlob(docType, pending, applicationId, (progress) => {
-        onDocumentProgress?.(docType, {
-          documentType: docType,
-          progress,
-          status: 'uploading',
+      const results: UploadedDocument[] = [];
+      for (let i = 0; i < pendingFiles.length; i++) {
+        const result = await uploadDocumentToBlob(docType, pendingFiles[i], applicationId, (progress) => {
+          onDocumentProgress?.(docType, {
+            documentType: docType,
+            progress,
+            status: 'uploading',
+          });
         });
-      });
+        results.push(result);
+      }
 
-      uploaded[docType] = result;
+      uploaded[docType] = results;
       onDocumentProgress?.(docType, {
         documentType: docType,
         progress: 100,
