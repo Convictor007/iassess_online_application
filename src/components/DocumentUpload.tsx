@@ -120,17 +120,26 @@ export default function DocumentUpload({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         {docs.map((doc) => {
           const files = documents[doc.type] ?? [];
+          const hasFiles = files.length > 0;
           return (
-            <DocumentUploader
+            <div
               key={doc.type}
-              documentType={doc.type}
-              label={doc.label}
-              required={doc.required}
-              files={files}
-              maxFiles={MAX_FILES_PER_TYPE}
-              onAdd={(d) => onDocumentAdd(doc.type, d)}
-              onRemove={(index) => onDocumentRemove(doc.type, index)}
-            />
+              className={`border rounded-xl p-4 transition-colors ${
+                hasFiles
+                  ? 'border-green-200 bg-green-50/30'
+                  : 'border-gray-200 bg-gray-50/50'
+              }`}
+            >
+              <DocumentUploader
+                documentType={doc.type}
+                label={doc.label}
+                required={doc.required}
+                files={files}
+                maxFiles={MAX_FILES_PER_TYPE}
+                onAdd={(d) => onDocumentAdd(doc.type, d)}
+                onRemove={(index) => onDocumentRemove(doc.type, index)}
+              />
+            </div>
           );
         })}
       </div>
