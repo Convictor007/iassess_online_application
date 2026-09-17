@@ -4,6 +4,8 @@ import {
   listTransactions,
   updateTransactionStatus,
 } from "./lib/repository.mjs";
+import { buildStatusEmailHtml } from "./lib/email-template-status.mjs";
+import { sendEmail } from "./lib/mailer.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 
@@ -143,6 +145,37 @@ export default async function handler(req, res) {
       if (!updated) {
         return res.status(404).json({ error: "Application not found" });
       }
+
+      // Send status update email for online submissions
+      try {
+        const txn = await getFullTransaction(String(id));
+        if (txn?.requestor_email && txn?.submission_method === "online") {
+          const statusLabels = {
+            under_review: "Documents Under Review",
+            approved: "Documents Approved",
+            needs_revision: "Documents Need Revision",
+            rejected: "Application Rejected",
+            processing: "Application Under Processing",
+            completed: "Application Completed",
+          };
+          if (statusLabels[status]) {
+            const html = buildStatusEmailHtml({
+              referenceNumber: txn.reference_number,
+              requestorName: txn.requestor_name,
+              newStatus: status,
+              notes,
+            });
+            await sendEmail({
+              to: txn.requestor_email,
+              subject: `[${statusLabels[status]}] - ${txn.reference_number} | Municipal Assessor's Office`,
+              html,
+            }).catch(e => console.error("Status email failed:", e.message));
+          }
+        }
+      } catch (emailErr) {
+        console.error("Status email error (non-blocking):", emailErr.message);
+      }
+
       return res.status(200).json({ success: true });
     } catch (err) {
       console.error("PATCH /api/applications error:", err?.message, err?.stack);
