@@ -92,16 +92,15 @@ export default function DocumentUploader({
             const isImg = isImage(file.file.type);
             return (
               <div key={index} className="border border-green-200 bg-green-50 rounded-lg overflow-hidden">
-                <div className="relative bg-gray-100 flex items-center justify-center" style={{ minHeight: isImg ? 80 : 40 }}>
+                <div className="relative bg-gray-100" style={{ height: 120 }}>
                   {isImg ? (
                     <img
                       src={file.previewUrl}
                       alt={file.file.name}
                       className="w-full h-full object-cover"
-                      style={{ minHeight: 80 }}
                     />
                   ) : (
-                    <div className="flex flex-col items-center py-2 px-2">
+                    <div className="flex flex-col items-center justify-center h-full py-2 px-2">
                       <i className="bi bi-file-earmark-text text-2xl text-gray-400 mb-1"></i>
                       <span className="text-[10px] text-gray-500 text-center leading-tight px-2">{file.file.name}</span>
                     </div>
