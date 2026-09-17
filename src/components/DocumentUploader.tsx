@@ -126,17 +126,17 @@ export default function DocumentUploader({
         </div>
       )}
 
-      {/* Add file button / drop zone */}
+      {/* Add file drop zone */}
       {canAddMore ? (
         <div
           onDragOver={(e) => { e.preventDefault(); }}
           onDrop={handleDrop}
-          className="border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-lg p-3 text-center transition-colors flex flex-col items-center justify-center cursor-pointer"
+          className="border-2 border-dashed border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 rounded-lg p-4 text-center transition-colors cursor-pointer"
           onClick={() => fileInputRef.current?.click()}
         >
-          <i className="bi bi-plus-circle text-2xl text-gray-400 mb-1"></i>
-          <div className="text-xs text-gray-600 mb-1.5">
-            {files.length === 0 ? 'Drag and drop or click to upload' : 'Add another file'}
+          <i className="bi bi-cloud-arrow-up text-3xl text-blue-500 mb-1"></i>
+          <div className="text-xs text-gray-700 font-medium mb-2">
+            {files.length === 0 ? 'Drag and drop or click to upload' : `Add more files (${files.length}/${maxFiles})`}
           </div>
           <div className="flex justify-center gap-2" onClick={(e) => e.stopPropagation()}>
             <button
@@ -147,12 +147,12 @@ export default function DocumentUploader({
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 inline-flex items-center gap-1"
+              className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 inline-flex items-center gap-1"
             >
               <i className="bi bi-folder2-open"></i> Gallery
             </button>
           </div>
-          <div className="text-[10px] text-gray-400 mt-1.5">
+          <div className="text-[10px] text-gray-500 mt-2">
             JPG, PNG, WebP, or PDF — Max 10MB each
           </div>
         </div>
