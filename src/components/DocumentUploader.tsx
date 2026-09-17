@@ -35,6 +35,7 @@ export default function DocumentUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [previewFile, setPreviewFile] = useState<PendingDocument | null>(null);
+  const [showDropZone, setShowDropZone] = useState(files.length === 0);
 
   const canAddMore = files.length < maxFiles;
 
@@ -63,6 +64,7 @@ export default function DocumentUploader({
       previewUrl,
       addedAt: new Date().toISOString(),
     });
+    setShowDropZone(false);
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,8 +118,17 @@ export default function DocumentUploader({
         </div>
       )}
 
-      {/* Add file drop zone */}
-      {canAddMore ? (
+      {/* Upload more button / drop zone */}
+      {canAddMore && !showDropZone && files.length > 0 && (
+        <button
+          onClick={() => setShowDropZone(true)}
+          className="flex items-center justify-center gap-1.5 py-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+        >
+          <i className="bi bi-plus-circle"></i> Upload more files
+        </button>
+      )}
+
+      {canAddMore && (showDropZone || files.length === 0) && (
         <div
           onDragOver={(e) => { e.preventDefault(); }}
           onDrop={handleDrop}
@@ -146,7 +157,9 @@ export default function DocumentUploader({
             JPG, PNG, WebP, or PDF — Max 10MB each
           </div>
         </div>
-      ) : (
+      )}
+
+      {!canAddMore && (
         <div className="border border-gray-200 bg-gray-50 rounded-lg p-3 text-center">
           <div className="text-xs text-gray-500">
             <i className="bi bi-check-circle-fill text-green-500 mr-1"></i>
