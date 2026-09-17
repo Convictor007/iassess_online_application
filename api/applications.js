@@ -3,9 +3,9 @@ import {
   getFullTransaction,
   listTransactions,
   updateTransactionStatus,
-} from "./lib/repository.mjs";
-import { buildStatusEmailHtml } from "./lib/email-template-status.mjs";
-import { sendEmail } from "./lib/mailer.mjs";
+} from "./_lib/repository.mjs";
+import { buildStatusEmailHtml } from "./_lib/email-template-status.mjs";
+import { sendEmail } from "./_lib/mailer.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 

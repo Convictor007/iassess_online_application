@@ -1,4 +1,4 @@
-import { getTransactionById } from "../lib/repository.mjs";
+import { getTransactionById } from "../_lib/repository.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 

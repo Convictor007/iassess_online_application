@@ -1,6 +1,6 @@
-import { buildEmailHtml } from "./lib/email-template.mjs";
-import { buildOnlineEmailHtml } from "./lib/email-template-online.mjs";
-import { sendEmail } from "./lib/mailer.mjs";
+import { buildEmailHtml } from "./_lib/email-template.mjs";
+import { buildOnlineEmailHtml } from "./_lib/email-template-online.mjs";
+import { sendEmail } from "./_lib/mailer.mjs";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
