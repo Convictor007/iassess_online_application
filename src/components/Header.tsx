@@ -1,19 +1,19 @@
 export default function Header() {
   return (
     <header className="bg-[#102E50] text-white shadow-lg shrink-0">
-      <div className="max-w-3xl mx-auto px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="max-w-3xl mx-auto px-5 py-4">
+        <div className="flex items-center gap-4">
           <img
-            src="https://www.balatandrrm.org/wp-content/uploads/2025/09/cropped-balatan_logo-1.png"
+            src="/balatan-logo.jpg"
             alt="Municipal Government of Balatan"
-            className="w-12 h-12 object-contain"
+            className="w-[86px] h-[86px] object-cover rounded-full border-2 border-white/20"
           />
           <div className="min-w-0">
-            <p className="text-[10px] text-blue-200 uppercase tracking-wider leading-tight">Republic of the Philippines</p>
-            <h1 className="text-base font-bold leading-tight">
+            <p className="text-xs text-blue-200 uppercase tracking-wider leading-tight">Republic of the Philippines</p>
+            <h1 className="text-xl font-bold leading-tight">
               MUNICIPALITY OF BALATAN
             </h1>
-            <p className="text-[10px] text-blue-300 leading-tight">
+            <p className="text-xs text-blue-300 leading-tight">
               Office of the Municipal Assessor &mdash; Online Application Form
             </p>
           </div>

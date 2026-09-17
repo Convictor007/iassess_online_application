@@ -118,9 +118,9 @@ export function buildOnlineEmailHtml(payload) {
           <!-- Success Banner -->
           <tr>
             <td style="padding: 22px 28px 6px; text-align: center;">
-              <div style="background-color: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 14px 20px;">
-                <div style="font-size: 16px; font-weight: 700; color: #166534; margin-bottom: 4px;">&#10003; Application Received Successfully</div>
-                <div style="font-size: 12px; color: #166534;">Your documents have been uploaded online. No need to bring physical documents to the office.</div>
+              <div style="background-color: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 14px 20px;">
+                <div style="font-size: 16px; font-weight: 700; color: #1e40af; margin-bottom: 4px;">&#128269; Application Received Successfully</div>
+                <div style="font-size: 12px; color: #1e40af;">Your documents have been uploaded online and are now <strong>under review</strong>. You will be notified of the review result.</div>
               </div>
             </td>
           </tr>
@@ -183,41 +183,34 @@ export function buildOnlineEmailHtml(payload) {
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f; vertical-align: top; width: 18px;">1.</td>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">Our team will review your uploaded documents.</td>
+                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">Our team will <strong>review your uploaded documents</strong> within 1-2 business days.</td>
                         </tr>
-                        ${isAssessment ? `
                         <tr>
                           <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f; vertical-align: top;">2.</td>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">Pay the required fees at the Municipal Assessor's Office.</td>
-                        </tr>
-                        ` : `
-                        <tr>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f; vertical-align: top;">2.</td>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">Pay the required fees at the Municipal Assessor's Office.</td>
+                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">You will receive an <strong>email notification</strong> with the review result:
+                            <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 11px; color: #374151;">
+                              <li><strong style="color: #166534;">Approved</strong> — Visit the office with your original documents</li>
+                              <li><strong style="color: #92400e;">Needs Revision</strong> — Resubmit the required document(s)</li>
+                              <li><strong style="color: #991b1b;">Rejected</strong> — Application cannot be processed</li>
+                            </ul>
+                          </td>
                         </tr>
                         <tr>
                           <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f; vertical-align: top;">3.</td>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">Your certified document/s will be ready for pickup within 3-5 business days.</td>
+                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">If approved, <strong>visit the Municipal Assessor's Office</strong> with your original documents within <strong>15 calendar days</strong>.</td>
                         </tr>
-                        `}
                         <tr>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f; vertical-align: top;">${isAssessment ? "4" : "4"}.</td>
-                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">You will receive an email notification once your documents are processed.</td>
+                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f; vertical-align: top;">4.</td>
+                          <td style="padding: 3px 0; font-size: 12px; color: #1e3a5f;">The assessor will advise you on <strong>payment and next steps</strong>.</td>
                         </tr>
                       </table>
                     </div>
 
-                    <!-- Payment Section -->
-                    <div style="margin-top: 14px; padding: 14px 16px; background-color: #fefce8; border: 1px solid #fde047; border-radius: 6px;">
-                      <div style="font-size: 13px; font-weight: 700; color: #854d0e; margin-bottom: 8px;">Payment</div>
-                      <table width="100%" cellpadding="0" cellspacing="0">
-                        <tr>
-                          <td style="padding: 3px 0; font-size: 12px; color: #713f12;">&#9633; <strong>Counter Payment</strong> — Pay at the Municipal Assessor's Office, Balatan, Camarines Sur (Mon-Fri, 8:00 AM - 5:00 PM). Present your Transaction Code.</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0 3px; font-size: 12px; color: #713f12;">&#9633; <strong>Online Payment</strong> — <span style="color: #b45309; font-weight: 600;">COMING SOON!</span> GCash, Maya, and bank transfer options will be available soon.</td>
-                        </tr>
-                      </table>
+                    <!-- Important Note -->
+                    <div style="margin-top: 12px; padding: 10px 14px; background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 6px;">
+                      <div style="font-size: 11px; color: #92400e; line-height: 1.5;">
+                        <strong>&#9888; Important:</strong> Your approved appointment is valid for <strong>15 calendar days</strong> from the date of approval. If you do not visit the office within this period, you will need to submit a new application.
+                      </div>
                     </div>
 
 

@@ -127,19 +127,19 @@ export default async function handler(req, res) {
     if (!body) {
       return res.status(400).json({ error: "No body provided" });
     }
-    const { id, status } = body;
+    const { id, status, notes } = body;
 
     if (!id || !status) {
       return res.status(400).json({ error: "id and status are required" });
     }
 
-    const validStatuses = ["pending", "processing", "completed", "cancelled"];
+    const validStatuses = ["pending", "under_review", "approved", "needs_revision", "rejected", "processing", "completed", "cancelled", "expired"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
 
     try {
-      const updated = await updateTransactionStatus(Number(id), status, "api");
+      const updated = await updateTransactionStatus(Number(id), status, "api", notes);
       if (!updated) {
         return res.status(404).json({ error: "Application not found" });
       }

@@ -2,8 +2,8 @@ import type { CertificateItem, AssessmentType, TransactionCategory } from '../ty
 import type { DocumentGuide } from '../components/DocumentGuideModal';
 
 export const CERTIFICATES: CertificateItem[] = [
-  { id: 'certified_true_copy', label: 'Certified True Copy of Tax Declaration', fee: 75 },
-  { id: 'cert_land_holdings', label: 'Certificate of Landholdings', fee: 75 },
+  { id: 'certified_true_copy', label: 'Certified True Copy of Tax Declaration', fee: 100 },
+  { id: 'cert_land_holdings', label: 'Certificate of Landholdings', fee: 100 },
 ];
 
 export const BARANGAYS = [

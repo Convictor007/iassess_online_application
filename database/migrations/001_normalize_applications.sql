@@ -11,8 +11,11 @@ CREATE TABLE IF NOT EXISTS transactions (
   category VARCHAR(20) NOT NULL CHECK (category IN ('assessment', 'certification')),
   submission_method VARCHAR(10) CHECK (submission_method IN ('walk_in', 'online')),
   status VARCHAR(20) NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+    CHECK (status IN ('pending', 'under_review', 'approved', 'needs_revision', 'rejected', 'processing', 'completed', 'cancelled')),
   notes TEXT,
+  review_notes TEXT,
+  appointment_date DATE,
+  appointment_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

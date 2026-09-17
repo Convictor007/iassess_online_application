@@ -7,14 +7,16 @@ interface ConfirmationProps {
 }
 
 export default function Confirmation({ data, onNewApplication }: ConfirmationProps) {
+  const isOnline = data.submissionMethod === 'online';
+
   return (
     <div className="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-lg min-h-[400px]">
       {/* Left Panel - Blue */}
       <div className="bg-[#1a3c6e] text-white p-6 flex flex-col items-center justify-center sm:w-[40%]">
         <img
-          src="https://www.balatandrrm.org/wp-content/uploads/2025/09/cropped-balatan_logo-1.png"
+          src="/balatan-logo.jpg"
           alt="Balatan Logo"
-          className="w-20 h-20 mb-3"
+          className="w-20 h-20 mb-3 object-cover rounded-full border-2 border-white/20"
         />
         <p className="text-[10px] text-blue-200 uppercase tracking-wider mb-1">
           Municipal Government of Balatan
@@ -52,11 +54,22 @@ export default function Confirmation({ data, onNewApplication }: ConfirmationPro
       {/* Right Panel - Details */}
       <div className="bg-white p-6 sm:w-[60%] flex flex-col">
         <h3 className="text-sm font-bold text-gray-800 mb-2">Application Details</h3>
-        <p className="text-xs text-gray-600 mb-4">
-          Thank you for filling out our form.
-          <br />
-          Here is your transaction code to be presented on your visit.
-        </p>
+
+        {isOnline ? (
+          <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+            Thank you for submitting your application online.
+            <br />
+            Your documents are now <strong>under review</strong> by our assessment team.
+            <br />
+            You will receive an email notification once your documents have been verified.
+          </p>
+        ) : (
+          <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+            Thank you for filling out our form.
+            <br />
+            Here is your transaction code to be presented on your visit.
+          </p>
+        )}
 
         <table className="w-full border border-gray-200 mb-4">
           <tbody>
@@ -81,16 +94,45 @@ export default function Confirmation({ data, onNewApplication }: ConfirmationPro
           </tbody>
         </table>
 
-        <p className="text-xs text-gray-600 mb-3 leading-relaxed">
-          We have sent an email to your registered email address regarding the application
-          process and requirements. Please make sure to check your inbox, including the
-          spam/junk folder, for further instructions.
-        </p>
+        {isOnline ? (
+          <>
+            {/* Online Submission - What Happens Next */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <h4 className="text-xs font-bold text-blue-800 mb-2">What Happens Next?</h4>
+              <ol className="text-[11px] text-blue-900 space-y-1.5 list-decimal list-inside leading-relaxed">
+                <li>Our team will <strong>review your uploaded documents</strong> within 1-2 business days.</li>
+                <li>You will receive an <strong>email notification</strong> with the review result:
+                  <ul className="ml-4 mt-1 space-y-0.5 list-disc list-inside text-[10px]">
+                    <li><span className="text-green-700 font-medium">Approved</span> — Proceed to submit original documents</li>
+                    <li><span className="text-amber-700 font-medium">Needs Revision</span> — Resubmit the required document(s)</li>
+                    <li><span className="text-red-700 font-medium">Rejected</span> — Application cannot be processed</li>
+                  </ul>
+                </li>
+                <li>If approved, <strong>visit the Municipal Assessor&apos;s Office</strong> with your original documents.</li>
+                <li>The assessor will advise you on <strong>payment and next steps</strong>.</li>
+              </ol>
+            </div>
 
-        <p className="text-xs text-gray-600 mb-6 leading-relaxed">
-          Please visit the Municipal Assessor&apos;s Office with your complete physical documents
-          to proceed with your application.
-        </p>
+            <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">
+              Check your email regularly for updates. You can also track your application status
+              on the homepage using your Transaction Code.
+            </p>
+          </>
+        ) : (
+          <>
+            {/* Walk-in Submission */}
+            <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+              We have sent an email to your registered email address regarding the application
+              process and requirements. Please make sure to check your inbox, including the
+              spam/junk folder, for further instructions.
+            </p>
+
+            <p className="text-xs text-gray-600 mb-6 leading-relaxed">
+              Please visit the Municipal Assessor&apos;s Office with your complete physical documents
+              to proceed with your application.
+            </p>
+          </>
+        )}
 
         <div className="mt-auto">
           <button

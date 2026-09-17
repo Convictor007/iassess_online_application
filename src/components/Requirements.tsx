@@ -61,12 +61,7 @@ export default function Requirements({
                         </button>
                       )}
                     </div>
-                    {req.whereToGet && (
-                      <p className="text-[10px] text-blue-600 font-medium mt-1 ml-0">
-                        <i className="bi bi-geo-alt-fill mr-1"></i>
-                        {req.whereToGet}
-                      </p>
-                    )}
+
                     {req.guide && (
                       <p className="text-[10px] text-gray-500 mt-1 ml-0 leading-relaxed">
                         {req.guide}

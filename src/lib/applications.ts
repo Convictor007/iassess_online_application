@@ -10,6 +10,9 @@ export interface ApplicationRecord {
   submission_method: string | null;
   status: string;
   notes: string | null;
+  review_notes: string | null;
+  appointment_date: string | null;
+  appointment_expires_at: string | null;
   created_at: string;
   updated_at: string;
   assessment_type: string | null;
@@ -32,10 +35,26 @@ export interface ApplicationRecord {
     mime_type: string | null;
     uploaded_at: string;
   }>;
+  document_reviews?: Array<{
+    doc_type: string;
+    status: string;
+    notes: string | null;
+    reviewed_at: string | null;
+  }>;
 }
 
 export async function submitApplication(data: ApplicationData): Promise<{ referenceNumber: string; error?: string }> {
   try {
+    const documents = Object.entries(data.uploadedDocuments || {}).map(([docType, val]) => {
+      if (!val) return null;
+      return {
+        doc_type: docType,
+        file_name: val.fileName,
+        file_url: val.fileUrl,
+        uploaded_at: val.uploadedAt,
+      };
+    }).filter(Boolean);
+
     const res = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -44,7 +63,7 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
         certificationSelections: data.certificationSelections,
-        submissionMethod: 'walk_in',
+        submissionMethod: data.submissionMethod,
         ownerName: data.propertyInfo.ownerName,
         taxDeclarations: data.propertyInfo.taxDeclarations.filter(td => td.trim()),
         titleNo: data.propertyInfo.titleNo || null,
@@ -57,6 +76,7 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         requestorContact: data.requestorInfo.contactNumber,
         requestorEmail: data.requestorInfo.email,
         purpose: data.requestorInfo.purpose,
+        documents,
       }),
     });
 
@@ -115,7 +135,7 @@ export async function sendConfirmationEmail(data: ApplicationData): Promise<{ su
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
         certificationSelections: data.certificationSelections,
-        submissionMethod: 'walk_in',
+        submissionMethod: data.submissionMethod,
         requestorName: data.requestorInfo.name,
         requestorEmail: data.requestorInfo.email,
         requestorContact: data.requestorInfo.contactNumber,

@@ -108,7 +108,8 @@ export async function getFullTransaction(referenceNumber) {
   const rows = await sql`
     SELECT
       t.id, t.reference_number, t.category, t.submission_method, t.status,
-      t.notes, t.created_at, t.updated_at,
+      t.notes, t.review_notes, t.appointment_date, t.appointment_expires_at,
+      t.created_at, t.updated_at,
       a.assessment_type,
       p.owner_name, p.title_no, p.lot_no, p.block_no, p.street_name, p.barangay,
       r.name AS requestor_name, r.address AS requestor_address,
@@ -132,7 +133,13 @@ export async function getFullTransaction(referenceNumber) {
     FROM documents WHERE trn_id = ${txn.id} ORDER BY uploaded_at
   `;
 
-  return { ...txn, documents: docs };
+  // Fetch document reviews
+  const reviews = await sql`
+    SELECT doc_type, status, notes, reviewed_at
+    FROM document_reviews WHERE trn_id = ${txn.id} ORDER BY created_at
+  `;
+
+  return { ...txn, documents: docs, document_reviews: reviews };
 }
 
 /**
@@ -370,11 +377,27 @@ export async function updateTransactionStatus(transactionId, newStatus, changedB
 
   const oldStatus = current.status;
 
-  await sql`
-    UPDATE transactions
-    SET status = ${newStatus}, updated_at = ${now}
-    WHERE id = ${transactionId}
-  `;
+  // If setting to 'approved', set appointment expiration (15 calendar days)
+  if (newStatus === 'approved') {
+    const expiresAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString();
+    await sql`
+      UPDATE transactions
+      SET status = ${newStatus}, review_notes = ${notes || null}, appointment_expires_at = ${expiresAt}, updated_at = ${now}
+      WHERE id = ${transactionId}
+    `;
+  } else if (newStatus === 'needs_revision' || newStatus === 'rejected') {
+    await sql`
+      UPDATE transactions
+      SET status = ${newStatus}, review_notes = ${notes || null}, updated_at = ${now}
+      WHERE id = ${transactionId}
+    `;
+  } else {
+    await sql`
+      UPDATE transactions
+      SET status = ${newStatus}, updated_at = ${now}
+      WHERE id = ${transactionId}
+    `;
+  }
 
   await sql`
     INSERT INTO status_history (trn_id, old_status, new_status, changed_by, notes)
@@ -382,6 +405,114 @@ export async function updateTransactionStatus(transactionId, newStatus, changedB
   `;
 
   return true;
+}
+
+/**
+ * Update document review status for a specific document type.
+ * @param {number} transactionId
+ * @param {string} docType
+ * @param {string} status - 'approved' | 'needs_revision' | 'rejected'
+ * @param {string} notes
+ * @param {string} reviewedBy
+ * @returns {Promise<boolean>}
+ */
+export async function updateDocumentReview(transactionId, docType, status, notes, reviewedBy) {
+  const sql = getSql();
+  const now = new Date().toISOString();
+
+  // Find the document
+  const [doc] = await sql`
+    SELECT id FROM documents WHERE trn_id = ${transactionId} AND doc_type = ${docType} LIMIT 1
+  `;
+
+  // Upsert review record
+  const existing = await sql`
+    SELECT id FROM document_reviews WHERE trn_id = ${transactionId} AND doc_type = ${docType} LIMIT 1
+  `;
+
+  if (existing[0]) {
+    await sql`
+      UPDATE document_reviews
+      SET status = ${status}, notes = ${notes || null}, reviewed_by = ${reviewedBy || 'system'}, reviewed_at = ${now}
+      WHERE id = ${existing[0].id}
+    `;
+  } else {
+    await sql`
+      INSERT INTO document_reviews (trn_id, doc_id, doc_type, status, notes, reviewed_by, reviewed_at)
+      VALUES (${transactionId}, ${doc?.id || null}, ${docType}, ${status}, ${notes || null}, ${reviewedBy || 'system'}, ${now})
+    `;
+  }
+
+  return true;
+}
+
+/**
+ * Get all document reviews for a transaction.
+ * @param {number} transactionId
+ * @returns {Promise<Array>}
+ */
+export async function getDocumentReviews(transactionId) {
+  const sql = getSql();
+  return sql`
+    SELECT dr.*, d.file_name, d.file_url
+    FROM document_reviews dr
+    LEFT JOIN documents d ON d.id = dr.doc_id
+    WHERE dr.trn_id = ${transactionId}
+    ORDER BY dr.created_at
+  `;
+}
+
+/**
+ * Schedule an appointment for a transaction.
+ * @param {number} transactionId
+ * @param {string} appointmentDate - YYYY-MM-DD
+ * @param {string} changedBy
+ * @param {string} reason
+ * @returns {Promise<boolean>}
+ */
+export async function scheduleAppointment(transactionId, appointmentDate, changedBy, reason) {
+  const sql = getSql();
+  const now = new Date().toISOString();
+  const expiresAt = new Date(new Date(appointmentDate).getTime() + 15 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [current] = await sql`
+    SELECT appointment_date FROM transactions WHERE id = ${transactionId} LIMIT 1
+  `;
+
+  if (!current) return false;
+
+  await sql`
+    UPDATE transactions
+    SET appointment_date = ${appointmentDate}, appointment_expires_at = ${expiresAt},
+        status = 'scheduled', updated_at = ${now}
+    WHERE id = ${transactionId}
+  `;
+
+  await sql`
+    INSERT INTO appointment_history (trn_id, old_date, new_date, reason, changed_by)
+    VALUES (${transactionId}, ${current.appointment_date}, ${appointmentDate}, ${reason || null}, ${changedBy || 'system'})
+  `;
+
+  return true;
+}
+
+/**
+ * Check and expire overdue appointments.
+ * @returns {Promise<number>} number of expired appointments
+ */
+export async function expireOverdueAppointments() {
+  const sql = getSql();
+  const now = new Date().toISOString();
+
+  const result = await sql`
+    UPDATE transactions
+    SET status = 'expired', updated_at = ${now}
+    WHERE status = 'scheduled'
+      AND appointment_expires_at IS NOT NULL
+      AND appointment_expires_at < ${now}
+  `;
+
+  return result.count || 0;
 }
 
 // ─── Delete ─────────────────────────────────────────────────────────────────

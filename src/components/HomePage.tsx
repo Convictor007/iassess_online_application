@@ -100,15 +100,17 @@ export default function HomePage({ onApply }: HomePageProps) {
           )}
 
           {trackingResult && (
-            <div className="mt-2 bg-white rounded p-2 text-[10px] space-y-1">
+            <div className="mt-2 bg-white rounded p-2 text-[10px] space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
                 <span className={`font-bold capitalize ${
                   trackingResult.status === 'completed' ? 'text-green-600' :
-                  trackingResult.status === 'processing' ? 'text-blue-600' :
-                  trackingResult.status === 'cancelled' ? 'text-red-600' :
+                  trackingResult.status === 'approved' || trackingResult.status === 'scheduled' ? 'text-blue-600' :
+                  trackingResult.status === 'processing' ? 'text-indigo-600' :
+                  trackingResult.status === 'needs_revision' ? 'text-amber-600' :
+                  trackingResult.status === 'rejected' || trackingResult.status === 'cancelled' || trackingResult.status === 'expired' ? 'text-red-600' :
                   'text-yellow-600'
-                }`}>{trackingResult.status}</span>
+                }`}>{trackingResult.status.replace(/_/g, ' ')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Type:</span>
@@ -118,6 +120,64 @@ export default function HomePage({ onApply }: HomePageProps) {
                 <span className="text-gray-500">Submitted:</span>
                 <span className="font-medium">{new Date(trackingResult.created_at).toLocaleDateString()}</span>
               </div>
+
+              {/* Show review notes if available */}
+              {trackingResult.review_notes && (
+                <div className="mt-1.5 p-1.5 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-gray-500 font-medium">Review Notes: </span>
+                  <span className="text-gray-700">{trackingResult.review_notes}</span>
+                </div>
+              )}
+
+              {/* Show document reviews if available */}
+              {trackingResult.document_reviews && trackingResult.document_reviews.length > 0 && (
+                <div className="mt-1.5">
+                  <span className="text-gray-500 font-medium">Document Review:</span>
+                  <div className="mt-1 space-y-0.5">
+                    {trackingResult.document_reviews.map((review, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <span className="capitalize">{review.doc_type.replace(/_/g, ' ')}</span>
+                        <span className={`font-medium ${
+                          review.status === 'approved' ? 'text-green-600' :
+                          review.status === 'needs_revision' ? 'text-amber-600' :
+                          review.status === 'rejected' ? 'text-red-600' :
+                          'text-gray-500'
+                        }`}>{review.status.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Show appointment info if available */}
+              {trackingResult.appointment_date && (
+                <div className="mt-1.5 p-1.5 bg-blue-50 rounded border border-blue-200">
+                  <span className="text-blue-700 font-medium">Appointment: </span>
+                  <span className="text-blue-800">{new Date(trackingResult.appointment_date).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  {trackingResult.appointment_expires_at && (
+                    <div className="text-[9px] text-blue-600 mt-0.5">
+                      Valid until: {new Date(trackingResult.appointment_expires_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Status-specific messages */}
+              {trackingResult.status === 'approved' && (
+                <div className="mt-1.5 p-1.5 bg-green-50 rounded border border-green-200 text-[9px] text-green-800">
+                  Your documents are approved! Please visit the Municipal Assessor's Office with your original documents.
+                </div>
+              )}
+              {trackingResult.status === 'needs_revision' && (
+                <div className="mt-1.5 p-1.5 bg-amber-50 rounded border border-amber-200 text-[9px] text-amber-800">
+                  Some documents need revision. Please check your email for details and resubmit.
+                </div>
+              )}
+              {trackingResult.status === 'expired' && (
+                <div className="mt-1.5 p-1.5 bg-red-50 rounded border border-red-200 text-[9px] text-red-800">
+                  Your appointment has expired. Please submit a new application.
+                </div>
+              )}
             </div>
           )}
         </div>

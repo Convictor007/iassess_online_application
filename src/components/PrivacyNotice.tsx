@@ -1,11 +1,13 @@
-import NavButtons from './NavButtons';
+import { useState } from 'react';
 
 interface PrivacyNoticeProps {
   onConsent: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
-export default function PrivacyNotice({ onConsent, onBack }: PrivacyNoticeProps) {
+export default function PrivacyNotice({ onConsent }: PrivacyNoticeProps) {
+  const [checked, setChecked] = useState(false);
+
   return (
     <div>
       <h2 className="text-base font-bold text-gray-800 mb-2">Data Privacy Notice</h2>
@@ -44,21 +46,39 @@ export default function PrivacyNotice({ onConsent, onBack }: PrivacyNoticeProps)
             to any unauthorized person, in adherence to the Data Privacy Act of 2012.
           </p>
         </section>
-
-        <div className="bg-blue-50 border border-[#0072D2]/30 rounded p-2">
-          <p className="text-xs text-[#102E50]">
-            <strong>Consent:</strong> &ldquo;I hereby give consent on using my personal information
-            for purposes related to my transaction.&rdquo;
-          </p>
-        </div>
       </div>
 
-      <NavButtons
-        onBack={onBack}
-        onNext={onConsent}
-        nextLabel="Yes, I give my consent"
-        showBack={false}
-      />
+      {/* Consent checkbox */}
+      <div className="mt-4 bg-blue-50 border border-[#0072D2]/30 rounded p-3">
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            className="mt-0.5 w-4 h-4 text-[#0072D2] border-gray-300 rounded focus:ring-[#0072D2] cursor-pointer"
+          />
+          <span className="text-xs text-[#102E50] leading-relaxed">
+            <strong>Consent:</strong> I hereby give consent on using my personal information
+            for purposes related to my transaction. I understand that this information will be
+            processed in accordance with the Data Privacy Act of 2012 (RA 10173).
+          </span>
+        </label>
+      </div>
+
+      <div className="mt-4 flex">
+        <button
+          onClick={onConsent}
+          disabled={!checked}
+          className="flex-1 px-4 py-2.5 bg-[#0072D2] text-white rounded font-semibold hover:bg-[#005fa3] transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0072D2]"
+        >
+          Yes, I give my consent
+        </button>
+      </div>
+      {!checked && (
+        <p className="text-[10px] text-gray-400 mt-1.5 text-center">
+          Please check the box above to proceed
+        </p>
+      )}
     </div>
   );
 }
