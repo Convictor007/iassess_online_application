@@ -17,22 +17,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { pathname } = req.query;
+  const { url } = req.query;
 
-  if (!pathname) {
-    return res.status(400).json({ error: 'Missing pathname parameter' });
+  if (!url) {
+    return res.status(400).json({ error: 'Missing url parameter' });
   }
 
   try {
-    // Get a signed download URL valid for 1 hour
-    const url = getDownloadUrl(pathname, {
-      expiresIn: 3600, // 1 hour
-    });
+    const signedUrl = getDownloadUrl(url);
 
     return res.status(200).json({
       success: true,
-      url,
-      expiresIn: 3600,
+      url: signedUrl,
     });
   } catch (error) {
     console.error('Document view error:', error);
