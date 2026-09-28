@@ -97,7 +97,7 @@ export default async function handler(req, res) {
     const pathname = `${applicationId}/${documentType}-${Date.now()}-${safeName}`;
 
     const blob = await put(pathname, fileBuffer, {
-      access: 'private',
+      access: 'public',
       contentType: fileMime,
     });
 
