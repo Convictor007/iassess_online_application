@@ -1,6 +1,5 @@
 import type { ApplicationData } from '../types';
 import { CATEGORY_LABELS } from '../data/transactions';
-import assessorLogo from '../assets/assessor_logo.png';
 
 interface ConfirmationProps {
   data: ApplicationData;
@@ -14,18 +13,11 @@ export default function Confirmation({ data, onNewApplication }: ConfirmationPro
     <div className="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-lg min-h-[400px]">
       {/* Left Panel - Blue */}
       <div className="bg-[#1a3c6e] text-white p-6 flex flex-col items-center justify-center sm:w-[40%]">
-        <div className="flex items-center gap-2 mb-3">
-          <img
-            src={assessorLogo}
-            alt="Municipal Assessor"
-            className="w-14 h-14 object-contain rounded-full border-2 border-white/20"
-          />
-          <img
-            src="/balatan-logo.jpg"
-            alt="Balatan Logo"
-            className="w-20 h-20 object-cover rounded-full border-2 border-white/20"
-          />
-        </div>
+        <img
+          src="/balatan-logo.jpg"
+          alt="Balatan Logo"
+          className="w-20 h-20 mb-3 object-cover rounded-full border-2 border-white/20"
+        />
         <p className="text-[10px] text-blue-200 uppercase tracking-wider mb-1">
           Municipal Government of Balatan
         </p>
