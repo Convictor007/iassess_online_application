@@ -76,10 +76,7 @@ export default function SubmissionMethod({
               <div className="font-bold text-sm text-gray-800">Online Submission</div>
               <div className="text-xs text-gray-600 mt-1">
                 Upload digital copies of your documents using your phone camera or file upload.
-                Submit everything online — no need to visit the office.
-              </div>
-              <div className="text-[10px] text-green-600 mt-2 font-medium">
-                Recommended: Faster processing, no travel required
+                Online submission is for initial review only — you still need to bring original documents to the office to claim your TD copies.
               </div>
             </div>
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${

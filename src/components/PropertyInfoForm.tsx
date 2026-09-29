@@ -11,8 +11,10 @@ interface PropertyInfoFormProps {
 }
 
 const isValidTaxDeclaration = (value: string) => {
-  const normalized = value.trim();
-  return normalized !== '' && normalized !== '--' && /[A-Za-z0-9]/.test(normalized);
+  const normalized = value.trim().toUpperCase();
+  if (normalized === '' || normalized === '--') return false;
+  if (normalized === 'N/A') return true;
+  return /[A-Za-z0-9]/.test(normalized);
 };
 
 export default function PropertyInfoForm({
@@ -65,7 +67,10 @@ export default function PropertyInfoForm({
   const validTaxDecs = data.taxDeclarations
     .map((td, index) => ({ value: td, index }))
     .filter(({ value }) => isValidTaxDeclaration(value));
-  const isValid = data.ownerName.trim() !== '' && validTaxDecs.length > 0 && data.barangay !== '';
+  const hasNAPTaxDec = validTaxDecs.some(({ value }) => value.trim().toUpperCase() === 'N/A');
+  const hasTitleNo = data.titleNo.trim() !== '';
+  const hasTaxDecInfo = validTaxDecs.length > 0 || hasTitleNo || hasNAPTaxDec;
+  const isValid = data.ownerName.trim() !== '' && hasTaxDecInfo && data.barangay !== '';
 
   return (
     <div>
@@ -101,7 +106,7 @@ export default function PropertyInfoForm({
               Add Tax Dec
             </button>
           </div>
-          <p className="text-xs text-gray-500 italic mt-1">(ex. F-001-12345) maximum of 200 characters</p>
+          <p className="text-xs text-gray-500 italic mt-1">(ex. F-001-12345) maximum of 200 characters. Enter N/A if not available.</p>
         </div>
 
         {/* Tax Declaration Table */}
@@ -152,7 +157,7 @@ export default function PropertyInfoForm({
             className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#1a3c6e] focus:border-[#1a3c6e] placeholder-gray-400 italic"
             placeholder="Title No. (T.C.T./C.C.T.)"
           />
-          <p className="text-xs text-gray-500 italic mt-1">Required if Tax Declaration Number is not available.</p>
+          <p className="text-xs text-gray-500 italic mt-1">Required if Tax Declaration Number is not available. Enter N/A in Tax Declaration if you have no number.</p>
         </div>
 
         {/* Lot No / Block No / Street */}

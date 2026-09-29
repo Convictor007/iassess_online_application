@@ -69,10 +69,10 @@ export const REQUIREMENTS: Record<AssessmentType, { copies: number; label: strin
 };
 
 export const CERT_REQUIREMENTS: { copies: number; label: string; whereToGet: string; guide?: string }[] = [
-  { copies: 1, label: 'Photocopy of Valid I.D. of the Owner', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Any valid government-issued ID (Passport, Driver\'s License, PhilSys ID, SSS ID, etc.). Fee: ₱1-₱5.' },
+  { copies: 1, label: 'Photocopy of Valid I.D. of the Owner', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Any valid government-issued ID (Passport, Driver\'s License, PhilSys ID, SSS ID, etc.).' },
   { copies: 1, label: 'Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs — per RA 10173 (Data Privacy Act of 2012)', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Required under RA 10173. Must authorize the requestor to obtain copies of the Tax Declaration. Fee: ₱100-₱300. Processing: Same day.' },
   { copies: 1, label: 'Purpose of request must be indicated', whereToGet: 'Self-prepared', guide: 'Write the purpose (e.g., "for bank loan", "for insurance", "for personal records"). Include in the application form.' },
-  { copies: 1, label: 'Photocopy of Valid I.D. of Requestor', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Separate from the owner\'s ID. Even if you are the owner, you need your own ID photocopy. Fee: ₱1-₱5.' },
+  { copies: 1, label: 'Photocopy of Valid I.D. of Requestor', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Separate from the owner\'s ID. Even if you are the owner, you need your own ID photocopy.' },
 ];
 
 // Step-by-step guides for the citizen charter process
@@ -426,7 +426,7 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
       { step: 'Make a photocopy', details: 'Photocopy the front (and back if applicable) of the ID. Use clear, legible photocopy.' },
       { step: 'Verify clarity', details: 'Ensure the name, photo, and ID number are clearly visible on the photocopy.' },
     ],
-    fees: '₱1-₱5 per page',
+    fees: 'Free',
     processingTime: 'Same day',
     tips: 'Bring the original ID as well — some offices may ask to verify it.',
   },
@@ -482,7 +482,7 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
       { step: 'Make a photocopy', details: 'Photocopy the front (and back if applicable) clearly.' },
       { step: 'Verify clarity', details: 'Ensure the name, photo, and ID number are clearly visible.' },
     ],
-    fees: '₱1-₱5 per page',
+    fees: 'Free',
     processingTime: 'Same day',
     tips: 'The requestor\'s ID is separate from the owner\'s ID. If you are the owner transacting for yourself, you still need to provide your own ID photocopy.',
   },
