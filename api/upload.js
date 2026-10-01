@@ -24,6 +24,7 @@ function parseMultipart(req) {
     let fileBuffer = null;
     let fileName = '';
     let fileMime = '';
+    let truncated = false;
 
     busboy.on('field', (name, value) => {
       fields[name] = value;
@@ -35,19 +36,26 @@ function parseMultipart(req) {
       fileMime = info.mimeType;
 
       stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('limit', () => {
+        truncated = true;
+      });
       stream.on('end', () => {
         fileBuffer = Buffer.concat(chunks);
       });
     });
 
     busboy.on('finish', () => {
-      resolve({ fields, fileBuffer, fileName, fileMime });
+      resolve({ fields, fileBuffer, fileName, fileMime, truncated });
     });
 
     busboy.on('error', (err) => reject(err));
 
     req.pipe(busboy);
   });
+}
+
+function blobToken() {
+  return process.env.BLOB_READ_WRITE_TOKEN || '';
 }
 
 export default async function handler(req, res) {
@@ -61,17 +69,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  const token = blobToken();
+  if (!token) {
     return res.status(500).json({
-      error: 'BLOB_READ_WRITE_TOKEN is not configured. Please add it to your .env file.',
+      error:
+        'BLOB_READ_WRITE_TOKEN is not configured. Add the private-store Vercel Blob token to .env / Vercel env vars.',
     });
   }
 
   try {
-    const { fields, fileBuffer, fileName, fileMime } = await parseMultipart(req);
+    const { fields, fileBuffer, fileName, fileMime, truncated } = await parseMultipart(req);
 
     const applicationId = fields.applicationId;
     const documentType = fields.documentType;
+
+    if (truncated) {
+      return res.status(413).json({ error: 'File too large. Maximum size is 10MB.' });
+    }
 
     if (!fileBuffer || !applicationId || !documentType) {
       return res.status(400).json({ error: 'Missing file, applicationId, or documentType' });
@@ -83,7 +97,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Determine file extension
     const extMap = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
@@ -91,26 +104,36 @@ export default async function handler(req, res) {
       'image/heic': 'heic',
       'application/pdf': 'pdf',
     };
-    const ext = extMap[fileMime] || 'bin';
-    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
-
+    const ext = extMap[fileMime];
+    let safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_') || `upload.${ext || 'bin'}`;
+    if (!/\.[a-z0-9]+$/i.test(safeName) && ext) {
+      safeName = `${safeName}.${ext}`;
+    }
     const pathname = `${applicationId}/${documentType}-${Date.now()}-${safeName}`;
 
-    // Store is configured as private — must use access: 'private'.
-    // Public access on a private store throws:
+    // Blob store is private. Public access throws:
     // "Cannot use public access on a private store."
     const blob = await put(pathname, fileBuffer, {
       access: 'private',
       contentType: fileMime,
+      token,
+      allowOverwrite: false,
     });
 
     return res.status(200).json({
       url: blob.url,
       pathname: blob.pathname,
+      access: 'private',
     });
   } catch (error) {
     console.error('Upload error:', error);
-    return res.status(500).json({ error: error.message || 'Failed to upload file' });
+    const message = error?.message || 'Failed to upload file';
+    const isPrivateStoreError = /public access on a private store/i.test(message);
+    return res.status(500).json({
+      error: isPrivateStoreError
+        ? 'Blob store is private, but the upload tried public access. Redeploy with access: "private" in api/upload.js.'
+        : message,
+    });
   }
 }
 

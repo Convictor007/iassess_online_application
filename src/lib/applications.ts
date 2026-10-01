@@ -32,6 +32,7 @@ export interface ApplicationRecord {
     doc_type: string;
     file_name: string;
     file_url: string;
+    blob_pathname?: string | null;
     mime_type: string | null;
     uploaded_at: string;
   }>;

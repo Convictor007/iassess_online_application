@@ -17,39 +17,59 @@ function pathnameFromBlobUrl(fileUrl) {
   }
 }
 
+function isPublicBlobUrl(fileUrl) {
+  return (
+    typeof fileUrl === 'string' &&
+    fileUrl.includes('public.blob.vercel-storage.com') &&
+    !fileUrl.includes('private.blob')
+  );
+}
+
 export default async function handler(req, res) {
   setCors(res);
 
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url } = req.query;
+  const { url, pathname: pathnameParam } = req.query;
 
-  if (!url) {
-    return res.status(400).json({ error: "Missing url parameter" });
+  if (!url && !pathnameParam) {
+    return res.status(400).json({ error: 'Missing url or pathname parameter' });
   }
 
-  // Public blob URLs can still be opened directly.
-  if (url.includes('public.blob.vercel-storage.com') && !url.includes('private.blob')) {
+  // Legacy public blobs can still be opened directly.
+  if (isPublicBlobUrl(url)) {
     return res.redirect(url);
   }
 
-  // Private store blobs must be streamed through the server with the token.
-  const pathname = pathnameFromBlobUrl(url);
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    return res.status(500).json({
+      error: 'BLOB_READ_WRITE_TOKEN is not configured for private document access.',
+    });
+  }
+
+  // Prefer explicit pathname (saved in DB), then derive it from the blob URL.
+  const pathname =
+    (typeof pathnameParam === 'string' && pathnameParam.trim()) || pathnameFromBlobUrl(url);
+
   if (!pathname) {
-    return res.status(400).json({ error: "Invalid blob URL" });
+    return res.status(400).json({ error: 'Invalid blob pathname/url' });
   }
 
   try {
-    const blobResponse = await get(pathname, { access: 'private' });
+    const blobResponse = await get(pathname, {
+      access: 'private',
+      token,
+    });
 
-    if (!blobResponse || blobResponse.statusCode !== 200) {
-      return res.status(502).json({ error: "Failed to fetch document" });
+    if (!blobResponse || blobResponse.statusCode !== 200 || !blobResponse.stream) {
+      return res.status(404).json({ error: 'Document not found in blob store' });
     }
 
     const contentType =
@@ -66,8 +86,8 @@ export default async function handler(req, res) {
     res.setHeader('Content-Disposition', contentDisposition);
     res.setHeader('Cache-Control', 'private, max-age=3600');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
 
-    // Convert Web ReadableStream → Node stream
     const { Readable } = await import('node:stream');
     const nodeStream = Readable.fromWeb(blobResponse.stream);
     nodeStream.pipe(res);
