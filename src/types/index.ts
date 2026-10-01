@@ -30,6 +30,7 @@ export type DocumentType =
 export interface UploadedDocument {
   fileName: string;
   fileUrl: string;
+  pathname?: string;
   uploadedAt: string;
 }
 

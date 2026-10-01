@@ -83,6 +83,7 @@ export default async function handler(req, res) {
           doc_type: d.doc_type,
           file_name: d.file_name,
           file_url: d.file_url,
+          blob_pathname: d.blob_pathname || null,
           mime_type: d.mime_type || null,
           file_size: d.file_size || null,
         })),

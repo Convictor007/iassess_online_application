@@ -51,6 +51,7 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         doc_type: docType,
         file_name: f.fileName,
         file_url: f.fileUrl,
+        blob_pathname: f.pathname || null,
         uploaded_at: f.uploadedAt,
       }));
     });
@@ -83,7 +84,10 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
     const result = await res.json();
 
     if (!res.ok) {
-      return { referenceNumber: data.referenceNumber, error: result.error || 'Failed to submit' };
+      return {
+        referenceNumber: data.referenceNumber,
+        error: result.detail || result.error || `Failed to submit (HTTP ${res.status})`,
+      };
     }
 
     return { referenceNumber: result.referenceNumber };

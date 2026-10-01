@@ -312,7 +312,7 @@ export default function App() {
                 const { error } = await submitApplication(data);
                 if (error) {
                   console.error('Failed to submit:', error);
-                  alert('Failed to submit application. Please try again.');
+                  alert(`Failed to submit application.\n\n${error}\n\nPlease try again.`);
                   return;
                 }
                 sendConfirmationEmail(data).catch(console.error);

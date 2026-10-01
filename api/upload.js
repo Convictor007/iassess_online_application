@@ -96,8 +96,11 @@ export default async function handler(req, res) {
 
     const pathname = `${applicationId}/${documentType}-${Date.now()}-${safeName}`;
 
+    // Store is configured as private — must use access: 'private'.
+    // Public access on a private store throws:
+    // "Cannot use public access on a private store."
     const blob = await put(pathname, fileBuffer, {
-      access: 'public',
+      access: 'private',
       contentType: fileMime,
     });
 

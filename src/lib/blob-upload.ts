@@ -122,6 +122,7 @@ export async function uploadDocumentToBlob(
   return {
     fileName: file.name,
     fileUrl: result.url,
+    pathname: result.pathname,
     uploadedAt: new Date().toISOString(),
   };
 }
