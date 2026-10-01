@@ -54,28 +54,12 @@ async function compressImage(file: File): Promise<File> {
   });
 }
 
-function isLocalhost(): boolean {
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return true;
-  }
-  return false;
-}
-
 export async function uploadDocumentToBlob(
   documentType: DocumentType,
   pending: PendingDocument,
   applicationId: string,
   onProgress?: (progress: number) => void,
 ): Promise<UploadedDocument> {
-  if (isLocalhost()) {
-    onProgress?.(100);
-    return {
-      fileName: pending.file.name,
-      fileUrl: `local://${applicationId}/${documentType}/${pending.file.name}`,
-      uploadedAt: new Date().toISOString(),
-    };
-  }
-
   const file = pending.file;
 
   onProgress?.(10);
@@ -101,19 +85,29 @@ export async function uploadDocumentToBlob(
     };
 
     xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(data);
-        } else {
-          reject(new Error(data.error || 'Upload failed'));
+      const raw = xhr.responseText || '';
+      let data: any = null;
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          data = null;
         }
-      } catch {
-        reject(new Error('Server returned an invalid response. Please try again.'));
       }
+      if (xhr.status >= 200 && xhr.status < 300 && data?.url) {
+        resolve(data);
+        return;
+      }
+      const detail = data?.error || raw.slice(0, 200) || `HTTP ${xhr.status}`;
+      reject(new Error(`Upload failed: ${detail}`));
     };
 
-    xhr.onerror = () => reject(new Error('Network error. Please check your connection.'));
+    xhr.onerror = () =>
+      reject(
+        new Error(
+          'Network error talking to /api/upload. On localhost, restart vite so /api is proxied to the backend.',
+        ),
+      );
     xhr.send(formData);
   });
 

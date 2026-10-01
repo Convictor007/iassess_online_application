@@ -43,6 +43,19 @@ export interface ApplicationRecord {
   }>;
 }
 
+async function readJsonResponse(res: Response): Promise<{ ok: boolean; status: number; data: any }> {
+  const text = await res.text();
+  let data: any = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { error: text.slice(0, 300) };
+    }
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
 export async function submitApplication(data: ApplicationData): Promise<{ referenceNumber: string; error?: string }> {
   try {
     const documents = Object.entries(data.uploadedDocuments || {}).flatMap(([docType, files]) => {
@@ -81,19 +94,23 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
       }),
     });
 
-    const result = await res.json();
+    const { ok, status, data: result } = await readJsonResponse(res);
 
-    if (!res.ok) {
+    if (!ok) {
       return {
         referenceNumber: data.referenceNumber,
-        error: result.detail || result.error || `Failed to submit (HTTP ${res.status})`,
+        error: result?.detail || result?.error || `Failed to submit (HTTP ${status})`,
       };
     }
 
-    return { referenceNumber: result.referenceNumber };
+    return { referenceNumber: result?.referenceNumber || data.referenceNumber };
   } catch (error) {
     console.error('Submit application error:', error);
-    return { referenceNumber: data.referenceNumber, error: 'Network error' };
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      referenceNumber: data.referenceNumber,
+      error: `Network error: ${message}. If you are on localhost, restart vite so /api is proxied to the backend.`,
+    };
   }
 }
 
