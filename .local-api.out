@@ -1,0 +1,3 @@
+[local-api] listening on http://127.0.0.1:3001
+[local-api] DATABASE_URL=set
+[local-api] BLOB_READ_WRITE_TOKEN=set
