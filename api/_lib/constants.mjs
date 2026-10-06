@@ -7,7 +7,48 @@ export const ASSESSMENT_LABELS = {
 export const CERTIFICATION_LABELS = {
   certified_true_copy: "Certified True Copy of Tax Declaration",
   cert_land_holdings: "Certificate of Landholdings",
+  true_extract_copy: "True Extract Copy of Tax Declaration",
+  duplicate_td: "Duplicate Copy of Tax Declaration",
+  no_declared_property: "No Declared Property / Indigency",
+  aggregate_land_holding: "Aggregate Land Holding",
+  latest_td: "As to the Latest Tax Declaration Issued",
+  land_with_improvement: "Land with Improvement(s)",
+  land_no_improvement: "Land with No Existing Improvement",
+  td_at_death: "Existing Tax Dec at the Time of Death",
+  no_property_at_death: "No Property at the Time of Death",
+  property_history: "Property History",
+  earliest_td: "Earliest Tax Declaration Issued",
+  effectivity_td: "Effectivity of Tax Declaration",
+  tax_map_location: "Location of Property per Tax Map",
+  appearance: "Appearance",
+  other_certifications: "Other Certifications",
 };
+
+/** Certification fees (Balatan). MTO OR/DS are payment steps, not assessor certificates. */
+export const CERTIFICATION_FEES = {
+  certified_true_copy: 100,
+  cert_land_holdings: 100,
+  true_extract_copy: 100,
+  duplicate_td: 100,
+  no_declared_property: 100,
+  aggregate_land_holding: 100,
+  latest_td: 1000,
+  land_with_improvement: 100,
+  land_no_improvement: 100,
+  td_at_death: 100,
+  no_property_at_death: 100,
+  property_history: 100,
+  earliest_td: 100,
+  effectivity_td: 100,
+  tax_map_location: 0,
+  appearance: 100,
+  other_certifications: 100,
+};
+
+export function getCertificationFee(certType) {
+  const fee = CERTIFICATION_FEES[certType];
+  return typeof fee === "number" ? fee : 100;
+}
 
 export const REQUIREMENTS = {
   transfer_ownership: [
@@ -39,8 +80,10 @@ export const REQUIREMENTS = {
   ],
   certification: [
     "Photocopy of Valid I.D. of the Owner",
+    "Photocopy of Valid I.D. of the Requestor",
     "Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs - per RA 10173 (Data Privacy Act of 2012)",
     "Purpose of request must be indicated",
-    "Photocopy of Valid I.D. of Requestor",
+    "Property identification - Tax Declaration No., lot no., barangay, and owner name",
+    "Certification fee - PHP 100.00 paid at MTO; Official Receipt required. Tax mapping / location products may be free.",
   ],
 };

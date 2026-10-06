@@ -6,6 +6,7 @@ import {
 } from "./_lib/repository.mjs";
 import { buildStatusEmailHtml } from "./_lib/email-template-status.mjs";
 import { sendEmail } from "./_lib/mailer.mjs";
+import { getCertificationFee } from "./_lib/constants.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 
@@ -60,8 +61,10 @@ export default async function handler(req, res) {
         assessment_type: assessmentType || undefined,
         certifications: (certificationSelections || []).map(c => ({
           cert_type: c.type,
-          copies: c.copies,
-          fee: c.fee || 0,
+          copies: c.copies || 1,
+          // Prefer client fee if provided; otherwise resolve from current Balatan schedule
+          fee: typeof c.fee === "number" ? c.fee : getCertificationFee(c.type),
+          notes: c.customNote || c.notes || null,
         })),
         property: {
           owner_name: ownerName,

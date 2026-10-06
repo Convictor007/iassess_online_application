@@ -18,7 +18,25 @@ export type AssessmentType =
 export type CertificationType =
   | 'certified_true_copy'
   | 'cert_land_holdings'
-  | 'tax_declaration';
+  | 'tax_declaration'
+  | 'true_extract_copy'
+  | 'duplicate_td'
+  | 'no_declared_property'
+  | 'aggregate_land_holding'
+  | 'latest_td'
+  | 'land_with_improvement'
+  | 'land_no_improvement'
+  | 'td_at_death'
+  | 'no_property_at_death'
+  | 'property_history'
+  | 'earliest_td'
+  | 'effectivity_td'
+  | 'tax_map_location'
+  | 'appearance'
+  | 'other_certifications'
+  // Legacy DB values kept only for old rows — not citizen-requestable assessor certs
+  | 'request_or'
+  | 'request_ds';
 
 export type DocumentType =
   | 'deed_of_sale'
@@ -62,6 +80,8 @@ export interface CertificationRow {
   cert_type: CertificationType;
   copies: number;
   fee: number;
+  /** Free-text for Other Certifications / Appearance (column `notes`). */
+  notes?: string | null;
 }
 
 /** properties — property info (1:1) */
@@ -168,7 +188,7 @@ export interface CreateTransactionInput {
   category: TransactionCategory;
   submission_method?: SubmissionMethod | null;
   assessment_type?: AssessmentType;
-  certifications?: { cert_type: CertificationType; copies: number; fee: number }[];
+  certifications?: { cert_type: CertificationType; copies: number; fee: number; notes?: string | null }[];
   property: {
     owner_name: string;
     title_no?: string | null;

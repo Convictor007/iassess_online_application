@@ -31,8 +31,8 @@ export async function createTransaction(input) {
   if (input.certifications && input.certifications.length > 0) {
     for (const cert of input.certifications) {
       await sql`
-        INSERT INTO certifications (trn_id, cert_type, copies, fee)
-        VALUES (${transactionId}, ${cert.cert_type}, ${cert.copies}, ${cert.fee})
+        INSERT INTO certifications (trn_id, cert_type, copies, fee, notes)
+        VALUES (${transactionId}, ${cert.cert_type}, ${cert.copies}, ${cert.fee}, ${cert.notes || null})
       `;
     }
   }

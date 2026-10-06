@@ -9,7 +9,26 @@ export type AssessmentType =
 
 export type CertificationType =
   | 'certified_true_copy'
-  | 'cert_land_holdings';
+  | 'cert_land_holdings'
+  | 'tax_declaration'
+  | 'true_extract_copy'
+  | 'duplicate_td'
+  | 'no_declared_property'
+  | 'aggregate_land_holding'
+  | 'latest_td'
+  | 'land_with_improvement'
+  | 'land_no_improvement'
+  | 'td_at_death'
+  | 'no_property_at_death'
+  | 'property_history'
+  | 'earliest_td'
+  | 'effectivity_td'
+  | 'tax_map_location'
+  | 'appearance'
+  | 'other_certifications'
+  // Legacy DB values kept only for old rows — not shown in the citizen catalog
+  | 'request_or'
+  | 'request_ds';
 
 export type SubmissionMethod = 'walk_in' | 'online';
 
@@ -43,12 +62,31 @@ export interface PendingDocument {
 export interface CertificateItem {
   id: CertificationType;
   label: string;
+  /** Fee in pesos. */
   fee: number;
+  /** Short purpose shown to citizens. */
+  purpose?: string;
+  /** Extra checklist notes for this product. */
+  extraRequirements?: string[];
+  /** When true, fee is zero (e.g., tax mapping). */
+  isFree?: boolean;
+  /** When true, death certificate is typically required (estate use). */
+  requiresDeathCert?: boolean;
+  /** Flag when fee needs MASSO/MTO confirmation (e.g., legacy Latest TD ₱1000). */
+  feeNeedsConfirmation?: boolean;
+  /** Process/treasury item rather than an assessor-issued certificate. */
+  isProcessStep?: boolean;
+  /** When true, citizen can type a free-text description (e.g., Other Certifications). */
+  allowCustomNote?: boolean;
+  /** Placeholder for the free-text note input. */
+  customNotePlaceholder?: string;
 }
 
 export interface CertificationSelection {
   type: CertificationType;
   copies: number;
+  /** Free-text note for Other Certifications / Appearance (stored as certifications.notes). */
+  customNote?: string;
 }
 
 export interface PropertyInfo {

@@ -1,5 +1,5 @@
 import type { CertificationSelection, CertificationType } from '../types';
-import { CERTIFICATES } from '../data/transactions';
+import { CERTIFICATES, CERTIFICATIONS_OVERVIEW } from '../data/transactions';
 import NavButtons from './NavButtons';
 
 interface CertificationTypeSelectProps {
@@ -34,6 +34,14 @@ export default function CertificationTypeSelect({
     );
   };
 
+  const updateCustomNote = (id: CertificationType, customNote: string) => {
+    onChange(
+      selections.map((s) =>
+        s.type === id ? { ...s, customNote: customNote.slice(0, 300) } : s
+      )
+    );
+  };
+
   const totalAmount = selections.reduce((sum, sel) => {
     const cert = CERTIFICATES.find((c) => c.id === sel.type);
     return sum + (cert ? cert.fee * sel.copies : 0);
@@ -43,6 +51,27 @@ export default function CertificationTypeSelect({
     <div>
       <h2 className="text-base font-bold text-gray-800 mb-1">Certifications</h2>
       <p className="text-xs text-gray-500 mb-3">Select certificates and specify copies.</p>
+
+      {/* What certifications are for */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <h3 className="text-xs font-bold text-[#102E50] mb-1">
+          {CERTIFICATIONS_OVERVIEW.title}
+        </h3>
+        <p className="text-[11px] text-gray-700 leading-relaxed mb-2">
+          {CERTIFICATIONS_OVERVIEW.intro}
+        </p>
+        <p className="text-[10px] font-semibold text-gray-700 mb-1">
+          Common uses:
+        </p>
+        <ul className="text-[10px] text-gray-600 list-disc pl-4 space-y-0.5 mb-2">
+          {CERTIFICATIONS_OVERVIEW.commonUses.map((use) => (
+            <li key={use}>{use}</li>
+          ))}
+        </ul>
+        <p className="text-[10px] text-gray-600 leading-relaxed">
+          {CERTIFICATIONS_OVERVIEW.howToUse}
+        </p>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
@@ -78,10 +107,58 @@ export default function CertificationTypeSelect({
                       className="w-3.5 h-3.5 text-[#0072D2] rounded"
                     />
                   </td>
-                  <td className="p-2.5 text-gray-800">{cert.label}</td>
+                  <td className="p-2.5 text-gray-800">
+                    <div className="font-medium">{cert.label}</div>
+                    {cert.purpose && (
+                      <div className="text-[10px] text-gray-500 mt-0.5 leading-snug">
+                        <span className="font-semibold text-gray-600">For: </span>
+                        {cert.purpose}
+                      </div>
+                    )}
+                    {cert.allowCustomNote && isSelected && (
+                      <div className="mt-2">
+                        <label className="block text-[10px] font-semibold text-gray-600 mb-0.5">
+                          Describe this certification
+                        </label>
+                        <input
+                          type="text"
+                          value={sel?.customNote ?? ''}
+                          onChange={(e) => updateCustomNote(cert.id, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          placeholder={
+                            cert.customNotePlaceholder ||
+                            'Type the certification you need...'
+                          }
+                          maxLength={300}
+                          className="w-full text-[11px] border border-gray-300 rounded px-2 py-1.5 text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0072D2] focus:border-[#0072D2]"
+                        />
+                      </div>
+                    )}
+                    {cert.requiresDeathCert && (
+                      <div className="text-[10px] text-amber-700 mt-0.5">
+                        Death Certificate typically required
+                      </div>
+                    )}
+                    {cert.isFree && (
+                      <div className="text-[10px] text-green-700 mt-0.5">
+                        Fee NONE (tax mapping)
+                      </div>
+                    )}
+                    {cert.feeNeedsConfirmation && (
+                      <div className="text-[10px] text-amber-700 mt-0.5">
+                        Fee schedule may need MASSO/MTO confirmation
+                      </div>
+                    )}
+                  </td>
                   <td className="p-2.5 text-gray-500 text-right">
-                    &#8369;{cert.fee}
-                    <span className="text-gray-400 block text-[10px]">per TD and Copy</span>
+                    {cert.isFree ? (
+                      <span className="text-green-700 font-medium">NONE</span>
+                    ) : (
+                      <>
+                        &#8369;{cert.fee}
+                        <span className="text-gray-400 block text-[10px]">per copy</span>
+                      </>
+                    )}
                   </td>
                   <td className="p-2.5 text-center">
                     {isSelected ? (

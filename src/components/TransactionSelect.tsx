@@ -16,8 +16,12 @@ const descriptions: Record<TransactionCategory, string[]> = {
     'Appraisal of Land Declared for the First Time',
   ],
   certification: [
-    'Certified True Copy of Tax Declaration',
-    'Certificate of Landholdings',
+    'Official statements from the assessor about property records',
+    'Use for loans, BIR, court, estate tax, DAR, hospitals',
+    'True Extract / Duplicate Copy of Tax Declaration',
+    'Latest, Earliest, Effectivity, Property History',
+    'Aggregate Land Holding / No Improvement / Death-related TD',
+    'Location of Property per Tax Map (free)',
   ],
 };
 

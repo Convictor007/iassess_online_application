@@ -1,4 +1,5 @@
 import type { ApplicationData } from '../types';
+import { CERTIFICATES } from '../data/transactions';
 
 /**
  * Matches the shape returned by getFullTransaction() in repository.mjs.
@@ -77,7 +78,15 @@ export async function submitApplication(data: ApplicationData): Promise<{ refere
         referenceNumber: data.referenceNumber,
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
-        certificationSelections: data.certificationSelections,
+        certificationSelections: data.certificationSelections.map((sel) => {
+          const cert = CERTIFICATES.find((c) => c.id === sel.type);
+          return {
+            type: sel.type,
+            copies: sel.copies,
+            fee: cert ? cert.fee : 100,
+            customNote: sel.customNote?.trim() || undefined,
+          };
+        }),
         submissionMethod: data.submissionMethod,
         ownerName: data.propertyInfo.ownerName,
         taxDeclarations: data.propertyInfo.taxDeclarations.filter(td => td.trim()),
@@ -156,7 +165,15 @@ export async function sendConfirmationEmail(data: ApplicationData): Promise<{ su
         referenceNumber: data.referenceNumber,
         transactionCategory: data.transactionCategory,
         assessmentType: data.assessmentType,
-        certificationSelections: data.certificationSelections,
+        certificationSelections: data.certificationSelections.map((sel) => {
+          const cert = CERTIFICATES.find((c) => c.id === sel.type);
+          return {
+            type: sel.type,
+            copies: sel.copies,
+            fee: cert ? cert.fee : 100,
+            customNote: sel.customNote?.trim() || undefined,
+          };
+        }),
         submissionMethod: data.submissionMethod,
         requestorName: data.requestorInfo.name,
         requestorEmail: data.requestorInfo.email,

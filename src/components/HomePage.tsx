@@ -33,8 +33,8 @@ export default function HomePage({ onApply }: HomePageProps) {
         </h2>
         <div className="bg-white/10 rounded p-3 text-[11px] leading-relaxed text-blue-100">
           <p className="mb-2">
-            Due to the high volume of clients transacting with the Municipal Assessor&apos;s Office,
-            we are implementing an online application system for your convenience.
+            The Municipal Assessor&apos;s Office of Balatan now accepts assessment and
+            certification requests through this Online Application Form for your convenience.
           </p>
           <p className="mb-2">
             <strong className="text-white">Assessment Transactions:</strong> Please submit your
@@ -42,7 +42,7 @@ export default function HomePage({ onApply }: HomePageProps) {
           </p>
           <p className="text-white font-medium">
             A TRANSACTION CODE will be sent via email upon submission.
-            We strongly advise you to send your requests online before you visit our office.
+            We advise you to send your requests online before you visit our office.
           </p>
         </div>
       </div>

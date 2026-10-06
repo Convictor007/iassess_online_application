@@ -62,8 +62,20 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadPr
               const cert = CERTIFICATES.find((c) => c.id === sel.type);
               return (
                 <div key={sel.type} className="flex justify-between text-sm text-gray-800">
-                  <span>{cert?.label}</span>
-                  <span className="font-medium">&#8369;{(cert?.fee ?? 0) * sel.copies}</span>
+                  <span className="pr-2">
+                    {cert?.label}
+                    <span className="text-[10px] text-gray-500 block">
+                      {sel.copies} {sel.copies > 1 ? 'copies' : 'copy'}
+                    </span>
+                    {sel.customNote?.trim() && (
+                      <span className="text-[10px] text-gray-600 block mt-0.5">
+                        Note: {sel.customNote.trim()}
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-medium whitespace-nowrap">
+                    {cert?.isFree ? 'NONE' : `₱${(cert?.fee ?? 0) * sel.copies}`}
+                  </span>
                 </div>
               );
             })}
@@ -71,6 +83,24 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadPr
               <span>Total</span>
               <span>&#8369;{certTotal}</span>
             </div>
+            {data.certificationSelections.some((sel) => {
+              const cert = CERTIFICATES.find((c) => c.id === sel.type);
+              return cert?.requiresDeathCert || cert?.feeNeedsConfirmation || cert?.isFree;
+            }) && (
+              <ul className="mt-2 space-y-0.5 text-[10px] text-gray-600 list-disc pl-4">
+                {data.certificationSelections.flatMap((sel) => {
+                  const cert = CERTIFICATES.find((c) => c.id === sel.type);
+                  if (!cert) return [];
+                  const notes: string[] = [];
+                  if (cert.requiresDeathCert) notes.push('Death Certificate typically required (estate use).');
+                  if (cert.isFree) notes.push('Tax mapping fee NONE — no MTO OR for this product.');
+                  if (cert.feeNeedsConfirmation) notes.push('Fee schedule may need MASSO/MTO confirmation.');
+                  return notes.map((n, i) => (
+                    <li key={`${sel.type}-${i}`}>{cert.label}: {n}</li>
+                  ));
+                })}
+              </ul>
+            )}
           </div>
         </div>
       )}

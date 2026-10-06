@@ -1,9 +1,154 @@
 import type { CertificateItem, AssessmentType, TransactionCategory } from '../types';
 import type { DocumentGuide } from '../components/DocumentGuideModal';
 
+/** Short citizen-facing explanation of what assessor certifications are used for. */
+export const CERTIFICATIONS_OVERVIEW = {
+  title: 'What are certifications for?',
+  intro:
+    'Assessor certifications are official statements from the Municipal Assessor\'s Office about your property records. Banks, BIR, courts, DAR, hospitals, embassies, and other offices often require them as proof of ownership status, assessment, improvements, or property history.',
+  commonUses: [
+    'Bank loans, mortgages, and financial institutions',
+    'BIR — transfer, capital gains tax, and estate tax',
+    'Court cases and legal proceedings',
+    'DAR / farmer-beneficiary requirements',
+    'Hospitals, DSWD, and medical social service',
+    'Personal file copies and property verification',
+  ],
+  howToUse:
+    'Select every assessor certification you need below. Each item explains its purpose. Standard paid certifications cost ₱100 at the Municipal Treasurer\'s Office (MTO) — pay there first and bring the Official Receipt to MASSO (OR is a payment step, not a separate certificate). Tax mapping / location products are free. Bring owner ID, requestor ID, and an SPA if you are not the owner (RA 10173).',
+};
+
+/**
+ * Assessor-issued certifications only (MASSO / Municipal Assessor's Office).
+ * Treasury products (Official Receipt, Request OR, Request DS) are payment steps at MTO,
+ * not assessor certificates — removed from this catalog.
+ * Fee source: Balatan certification schedule — ₱100.
+ * Tax mapping fee = NONE per Citizen Charter.
+ * Latest TD menu ₱1000 is unconfirmed — flagged feeNeedsConfirmation.
+ */
 export const CERTIFICATES: CertificateItem[] = [
-  { id: 'certified_true_copy', label: 'Certified True Copy of Tax Declaration', fee: 100 },
-  { id: 'cert_land_holdings', label: 'Certificate of Landholdings', fee: 100 },
+  // ── Tax Declaration family ──
+  {
+    id: 'certified_true_copy',
+    label: 'Certified True Copy of Tax Declaration',
+    fee: 100,
+    purpose: 'Certified copy of your Tax Declaration. Use it as proof that the property is assessed for taxation — for loans, BIR, transfers, court, or personal records. This is NOT a land title.',
+  },
+  {
+    id: 'true_extract_copy',
+    label: 'True Extract Copy of Tax Declaration',
+    fee: 100,
+    purpose: 'True extract of the Tax Declaration (same family as Certified True Copy). Shows the official record details of the property for official use.',
+  },
+  {
+    id: 'duplicate_td',
+    label: 'Duplicate Copy of Tax Declaration',
+    fee: 100,
+    purpose: 'A second copy of the same Tax Declaration when you need more than one certified copy for different offices or purposes.',
+  },
+  {
+    id: 'latest_td',
+    label: 'As to the Latest Tax Declaration Issued',
+    fee: 1000,
+    purpose: 'Certifies which Tax Declaration is currently on file (latest revision) — often needed for transfers, loans, or due diligence.',
+    feeNeedsConfirmation: true,
+  },
+  {
+    id: 'earliest_td',
+    label: 'Earliest Tax Declaration Issued',
+    fee: 100,
+    purpose: 'Certifies the earliest Tax Declaration on record for the lot or owner — useful for history, inheritance, or proving how long the property has been assessed.',
+  },
+  {
+    id: 'effectivity_td',
+    label: 'Effectivity of Tax Declaration',
+    fee: 100,
+    purpose: 'States when the current Tax Declaration took effect — useful when you need the timing of the latest assessment for loans, transfers, or tax payment questions.',
+  },
+  {
+    id: 'property_history',
+    label: 'Property History',
+    fee: 100,
+    purpose: 'Summary of the property\'s assessment / record history (previous revisions on file). Helps show changes in owner, area, or assessed value over time.',
+  },
+
+  // ── Holdings / status family ──
+  {
+    id: 'cert_land_holdings',
+    label: 'Certificate of Landholdings',
+    fee: 100,
+    purpose: 'Attests the assessed landholdings of the declarant — what properties are on record under that name for tax or legal purposes.',
+  },
+  {
+    id: 'aggregate_land_holding',
+    label: 'Aggregate Land Holding',
+    fee: 100,
+    purpose: 'Listing/attestation of total assessed properties (aggregate landholdings). Used for estate tax, court, DAR, bank, embassy, DSWD/hospital, and similar requirements.',
+  },
+  {
+    id: 'land_with_improvement',
+    label: 'Land with Improvement(s)',
+    fee: 100,
+    purpose: 'Attests the property has assessed building/structure/machinery on record — confirms that improvements are declared for taxation.',
+  },
+  {
+    id: 'land_no_improvement',
+    label: 'Land with No Existing Improvement',
+    fee: 100,
+    purpose: 'Certification of Non-Improvement — proves the parcel is vacant / has no declared building or machinery. Commonly required for BIR capital gains and some estate tax uses.',
+  },
+  {
+    id: 'no_declared_property',
+    label: 'No Declared Property / Indigency',
+    fee: 100,
+    purpose: 'Negative certification that no property is declared on record (or for indigency use). Confirm the exact form wording with MASSO for your purpose.',
+  },
+
+  // ── Death / estate family ──
+  {
+    id: 'td_at_death',
+    label: 'Existing Tax Dec at the Time of Death',
+    fee: 100,
+    purpose: 'Assessor statement that a Tax Declaration existed at (or nearest) the date of death — used for BIR estate tax and succession documents.',
+    requiresDeathCert: true,
+  },
+  {
+    id: 'no_property_at_death',
+    label: 'No Property at the Time of Death',
+    fee: 100,
+    purpose: 'Negative estate certification that the decedent had no property on record at date of death — for estate tax and related legal requirements.',
+    requiresDeathCert: true,
+  },
+
+  // ── Tax mapping (free per Citizen Charter) ──
+  {
+    id: 'tax_map_location',
+    label: 'Location of Property per Tax Map',
+    fee: 0,
+    purpose: 'Identifies lot location from the assessor tax map: area, adjoining lot, sketch, lot number, and owner. Free service for property identification (not a boundary dispute evidence by itself).',
+    isFree: true,
+  },
+
+  // ── Catch-all / local menu ──
+  {
+    id: 'appearance',
+    label: 'Appearance',
+    fee: 100,
+    purpose: 'Appearance / property-record certification (local menu item). Confirm the exact form and fee with MASSO for your use case.',
+    feeNeedsConfirmation: true,
+    allowCustomNote: true,
+    customNotePlaceholder:
+      'e.g., Certificate of Appearance for property records, court, or bank verification',
+  },
+  {
+    id: 'other_certifications',
+    label: 'Other Certifications',
+    fee: 100,
+    purpose: 'Catch-all for any assessor certification not listed above. Type what you need so staff can issue the correct certificate.',
+    allowCustomNote: true,
+    customNotePlaceholder:
+      'Describe the certification you need (e.g., Certification of Non-Payment, Insolvency Certificate, Tax Map Adjoining Lot, etc.)',
+  },
 ];
 
 export const BARANGAYS = [
@@ -68,12 +213,39 @@ export const REQUIREMENTS: Record<AssessmentType, { copies: number; label: strin
   ],
 };
 
+/** Standard certification requirements (Citizen Charter Service 2 + records management). */
 export const CERT_REQUIREMENTS: { copies: number; label: string; whereToGet: string; guide?: string }[] = [
   { copies: 1, label: 'Photocopy of Valid I.D. of the Owner', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Any valid government-issued ID (Passport, Driver\'s License, PhilSys ID, SSS ID, etc.).' },
-  { copies: 1, label: 'Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs — per RA 10173 (Data Privacy Act of 2012)', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Required under RA 10173. Must authorize the requestor to obtain copies of the Tax Declaration. Fee: ₱100-₱300. Processing: Same day.' },
-  { copies: 1, label: 'Purpose of request must be indicated', whereToGet: 'Self-prepared', guide: 'Write the purpose (e.g., "for bank loan", "for insurance", "for personal records"). Include in the application form.' },
-  { copies: 1, label: 'Photocopy of Valid I.D. of Requestor', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Separate from the owner\'s ID. Even if you are the owner, you need your own ID photocopy.' },
+  { copies: 1, label: 'Photocopy of Valid I.D. of the Requestor', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Separate from the owner\'s ID. Even if you are the owner, you need your own ID photocopy.' },
+  { copies: 1, label: 'Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs — per RA 10173 (Data Privacy Act of 2012)', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Required when the requestor is not the owner. Must authorize the requestor to obtain certification(s) from the Municipal Assessor\'s Office of Balatan. Fee: ₱100-₱300. Processing: Same day.' },
+  { copies: 1, label: 'Purpose of request must be indicated', whereToGet: 'Self-prepared', guide: 'Write the purpose (e.g., "for bank loan", "for insurance", "for estate tax", "for personal records"). Include in the application form.' },
+  { copies: 1, label: 'Property identification — Tax Declaration No., lot no., barangay, and owner name', whereToGet: 'Self-prepared / from TD or title', guide: 'Needed so MASSO can verify Tax Declaration and Field Appraisal files.' },
+  { copies: 1, label: 'Certification fee — ₱100.00', whereToGet: 'Municipal Treasurer\'s Office (MTO) — Balatan', guide: 'Pay at MTO and keep the Official Receipt. Submit the OR to MASSO before release. Tax mapping / location products may be free (fee NONE).' },
 ];
+
+/** Purpose-specific add-ons used in confirmation emails / summary when selections require them. */
+export const CERT_PURPOSE_ADDONS: Record<string, { requiresDeathCert?: boolean; extra?: string[] }> = {
+  td_at_death: {
+    requiresDeathCert: true,
+    extra: ['Death Certificate (CTC or photocopy) of the decedent', 'Purpose: estate tax / succession'],
+  },
+  no_property_at_death: {
+    requiresDeathCert: true,
+    extra: ['Death Certificate (CTC or photocopy) of the decedent', 'Purpose: estate tax / succession'],
+  },
+  tax_map_location: {
+    extra: ['Tax mapping fee is NONE — no MTO OR required for this product'],
+  },
+  latest_td: {
+    extra: ['Latest TD fee in ERPT menu may be ₱1000 — confirm current schedule with MASSO/MTO'],
+  },
+  aggregate_land_holding: {
+    extra: ['If for BIR estate tax: bring updated assessment + updated OR when available', 'If for DAR: bring DAR certification when available'],
+  },
+  land_no_improvement: {
+    extra: ['If for BIR capital gains: purpose letter + property ID; updated assessment/OR when required'],
+  },
+};
 
 // Step-by-step guides for the citizen charter process
 export const CITIZEN_CHARTER_PROCESS = {
