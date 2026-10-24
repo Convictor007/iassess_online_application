@@ -42,6 +42,11 @@ export default function RevisionPage() {
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [error, setError] = useState('');
 
+  // Captured before the early returns below — TS aliased-condition narrowing
+  // would otherwise narrow `phase` to 'ready' inside `ready && … phase === …`
+  // expressions and flag those comparisons as impossible.
+  const isSubmitting = phase === 'submitting';
+
   // This page must never be discoverable by search engines.
   useEffect(() => {
     const meta = document.createElement('meta');
@@ -251,8 +256,8 @@ export default function RevisionPage() {
           <div className={card}>
             <h2 className="text-lg font-bold text-gray-800 mb-1">Upload Revised Documents</h2>
             <p className="text-sm text-gray-600 mb-4">
-              The Assessor&apos;s Office requested clearer copies of the items below. Provide one
-              image (or PDF) per requirement, then submit.
+              The Assessor&apos;s Office requested clearer copies of the items below. Upload one
+              replacement image (or PDF) for each requirement; it will replace the current document.
             </p>
 
             <div className="bg-gray-50 rounded-md p-3 mb-4 text-sm space-y-1">
@@ -331,14 +336,14 @@ export default function RevisionPage() {
             <button
               type="button"
               onClick={submit}
-              disabled={!ready || !allSelected || phase === 'submitting'}
+              disabled={!ready || !allSelected || isSubmitting}
               className={`mt-5 w-full py-3 rounded-md font-semibold text-white text-sm transition ${
-                ready && allSelected && phase !== 'submitting'
+                ready && allSelected && !isSubmitting
                   ? 'bg-blue-700 hover:bg-blue-800 cursor-pointer'
                   : 'bg-gray-300 cursor-not-allowed text-gray-500'
               }`}
             >
-              {phase === 'submitting'
+              {isSubmitting
                 ? 'Submitting…'
                 : allSelected
                   ? 'Submit Revision'

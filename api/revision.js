@@ -1,7 +1,7 @@
 import {
   getTransactionById,
   updateTransactionStatus,
-  insertRevisionDocuments,
+  replaceRevisionDocuments,
 } from "./_lib/repository.mjs";
 import { verifyRevisionToken } from "./_lib/revision-token.mjs";
 
@@ -71,6 +71,7 @@ async function handlePost(req, res) {
   }
 
   const allowedKeys = new Set(payload.items.map((it) => it.key));
+  const uploadedKeys = new Set();
   const clean = [];
   for (const u of uploads) {
     const key = typeof u?.key === "string" ? u.key : "";
@@ -78,13 +79,21 @@ async function handlePost(req, res) {
     const fileUrl = typeof u?.fileUrl === "string" ? u.fileUrl : "";
     const blobPathname = typeof u?.blobPathname === "string" ? u.blobPathname : null;
     const mimeType = typeof u?.mimeType === "string" ? u.mimeType.slice(0, 100) : null;
-    if (!allowedKeys.has(key) || !fileName || !fileUrl) {
+    if (!allowedKeys.has(key) || uploadedKeys.has(key) || !fileName || !fileUrl) {
       return res.status(400).json({
         error: "bad_upload",
-        message: "An upload does not match the requirements marked for revision.",
+        message: "An upload is missing, duplicated, or does not match a requirement marked for revision.",
       });
     }
+    uploadedKeys.add(key);
     clean.push({ key, fileName, fileUrl, blobPathname, mimeType });
+  }
+
+  if (uploadedKeys.size !== allowedKeys.size) {
+    return res.status(400).json({
+      error: "missing_uploads",
+      message: "Please upload a file for every requirement marked for revision.",
+    });
   }
 
   const txn = await getTransactionById(payload.trnId);
@@ -101,7 +110,7 @@ async function handlePost(req, res) {
     });
   }
 
-  await insertRevisionDocuments(txn.id, clean);
+  await replaceRevisionDocuments(txn.id, clean);
 
   const changedBy = txn.requestor_email || "citizen";
   const notes = `Revised document(s) uploaded via secure revision link: ${clean

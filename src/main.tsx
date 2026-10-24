@@ -4,10 +4,9 @@ import './index.css'
 import App from './App.tsx'
 import RevisionPage from './components/RevisionPage.tsx'
 
-// /revision is the token-gated citizen upload page linked from needs-revision
-// emails. It is intentionally not part of the public form flow and has no
-// navigation to it — only people holding a signed link can use it.
-const isRevisionRoute = window.location.pathname.replace(/\/+$/, '') === '/revision'
+// The token-gated revision page is intentionally absent from the public form flow.
+const revisionRoutes = ['/uploadrevision', '/revision']
+const isRevisionRoute = revisionRoutes.includes(window.location.pathname.replace(/\/+$/, ''))
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

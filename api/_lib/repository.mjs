@@ -329,17 +329,59 @@ export async function getDocuments(transactionId) {
 }
 
 /**
- * Attach citizen-uploaded revision documents to a transaction.
+ * Replace citizen-uploaded revision documents on a transaction.
  * @param {number} transactionId
  * @param {Array<{key: string, fileName: string, fileUrl: string, blobPathname?: string|null, mimeType?: string|null}>} uploads
  */
-export async function insertRevisionDocuments(transactionId, uploads) {
+export async function replaceRevisionDocuments(transactionId, uploads) {
   const sql = getSql();
   for (const u of uploads) {
-    await sql`
-      INSERT INTO documents (trn_id, doc_type, file_name, file_url, blob_pathname, mime_type)
-      VALUES (${transactionId}, ${u.key}, ${u.fileName}, ${u.fileUrl}, ${u.blobPathname || null}, ${u.mimeType || null})
+    const [existing] = await sql`
+      SELECT id FROM documents
+      WHERE trn_id = ${transactionId} AND doc_type = ${u.key}
+      ORDER BY uploaded_at DESC, id DESC
+      LIMIT 1
     `;
+
+    let documentId;
+    if (existing) {
+      const [updated] = await sql`
+        UPDATE documents
+        SET file_name = ${u.fileName},
+            file_url = ${u.fileUrl},
+            blob_pathname = ${u.blobPathname || null},
+            mime_type = ${u.mimeType || null},
+            uploaded_at = NOW()
+        WHERE id = ${existing.id}
+        RETURNING id
+      `;
+      documentId = updated.id;
+    } else {
+      const [inserted] = await sql`
+        INSERT INTO documents (trn_id, doc_type, file_name, file_url, blob_pathname, mime_type)
+        VALUES (${transactionId}, ${u.key}, ${u.fileName}, ${u.fileUrl}, ${u.blobPathname || null}, ${u.mimeType || null})
+        RETURNING id
+      `;
+      documentId = inserted.id;
+    }
+
+    const [review] = await sql`
+      SELECT id FROM document_reviews
+      WHERE trn_id = ${transactionId} AND doc_type = ${u.key}
+      ORDER BY created_at DESC, id DESC
+      LIMIT 1
+    `;
+    if (review) {
+      await sql`
+        UPDATE document_reviews
+        SET doc_id = ${documentId},
+            status = 'pending',
+            notes = NULL,
+            reviewed_by = NULL,
+            reviewed_at = NULL
+        WHERE id = ${review.id}
+      `;
+    }
   }
 }
 
