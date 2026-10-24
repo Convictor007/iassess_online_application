@@ -329,6 +329,21 @@ export async function getDocuments(transactionId) {
 }
 
 /**
+ * Attach citizen-uploaded revision documents to a transaction.
+ * @param {number} transactionId
+ * @param {Array<{key: string, fileName: string, fileUrl: string, blobPathname?: string|null, mimeType?: string|null}>} uploads
+ */
+export async function insertRevisionDocuments(transactionId, uploads) {
+  const sql = getSql();
+  for (const u of uploads) {
+    await sql`
+      INSERT INTO documents (trn_id, doc_type, file_name, file_url, blob_pathname, mime_type)
+      VALUES (${transactionId}, ${u.key}, ${u.fileName}, ${u.fileUrl}, ${u.blobPathname || null}, ${u.mimeType || null})
+    `;
+  }
+}
+
+/**
  * Get tax declarations for a transaction.
  * @param {string} transactionId
  * @returns {Promise<Array>}

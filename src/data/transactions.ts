@@ -171,10 +171,19 @@ export const BARANGAYS = [
   'Tomatarayo',
 ];
 
-export const ASSESSMENT_LABELS: Record<AssessmentType, string> = {
-  transfer_ownership: 'Transfer of Ownership (With Title)',
-  transfer_handog: 'Transfer of Ownership (Handog Titulo)',
-  land_first_time: 'Appraisal of Land Declared for the First Time',
+export const ASSESSMENT_LABELS: Record<AssessmentType, { label: string; purpose?: string }> = {
+  transfer_ownership: {
+    label: 'Transfer of Ownership (With Title)',
+    purpose: 'When the property already has a TCT/CCT and ownership is being transferred through sale, donation, segregation, or extra-judicial settlement — the assessor reissues the Tax Declaration under the new owner.',
+  },
+  transfer_handog: {
+    label: 'Transfer of Ownership (Handog Titulo)',
+    purpose: 'When transferring ownership under Handog Titulo / DENR-issued titles — same transfer process, but the title source is DENR rather than the Registry of Deeds.',
+  },
+  land_first_time: {
+    label: 'Appraisal of Land Declared for the First Time',
+    purpose: 'When land is declared for the first time and has no Tax Declaration yet — the assessor appraises the property and issues the initial FAAS/TD after survey and supporting documents are submitted.',
+  },
 };
 
 export const CATEGORY_LABELS: Record<TransactionCategory, string> = {
@@ -661,7 +670,7 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
 };
 
 export function generateReferenceNumber(): string {
-  const prefix = 'BAL';
+  const prefix = 'BLTN';
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `${prefix}-${timestamp}-${random}`;

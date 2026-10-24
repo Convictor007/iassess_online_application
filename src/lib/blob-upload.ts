@@ -11,7 +11,7 @@ const MAX_DIMENSION = 2048;
 const JPEG_QUALITY = 0.8;
 const MAX_SIZE_BYTES = 4 * 1024 * 1024; // 4MB (Vercel limit is 4.5MB)
 
-async function compressImage(file: File): Promise<File> {
+export async function compressImage(file: File): Promise<File> {
   if (!file.type.startsWith('image/')) return file;
   if (file.size <= MAX_SIZE_BYTES) return file;
 

@@ -32,7 +32,7 @@ const assessorUsers = [2, 4]; // assessor@iassess.local, dareyes@my.cspc.edu.ph
 function refNum(n) {
   const ts = (Date.now() - n * 60000).toString(36).toUpperCase().slice(0, 8);
   const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `BAL-${ts}-${rand}`;
+  return `BLTN-${ts}-${rand}`;
 }
 
 // Transaction definitions: [category, assessmentType|certType, method, status, assignedTo, property, requestor]

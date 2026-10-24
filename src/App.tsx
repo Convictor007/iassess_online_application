@@ -184,7 +184,7 @@ export default function App() {
         if (data.transactionCategory === 'assessment' && data.assessmentType) {
           return (
             <Requirements
-              title={`Documents to Prepare: ${ASSESSMENT_LABELS[data.assessmentType]}`}
+              title={`Documents to Prepare: ${ASSESSMENT_LABELS[data.assessmentType].label}`}
               requirements={REQUIREMENTS[data.assessmentType]}
               note="Please bring these documents on your scheduled appointment date. Incomplete documents will not be processed."
               onBack={goBack}

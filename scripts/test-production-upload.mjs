@@ -19,7 +19,7 @@ function makePngBuffer() {
 async function main() {
   const png = makePngBuffer();
   const boundary = '----iassessBlobTest' + Date.now();
-  const applicationId = 'BAL-TEST-' + Date.now();
+  const applicationId = 'BLTN-TEST-' + Date.now();
   const documentType = 'valid_id';
   const fileName = 'pixel.png';
 

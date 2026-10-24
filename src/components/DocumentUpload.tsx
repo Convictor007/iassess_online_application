@@ -74,7 +74,7 @@ export default function DocumentUpload({
   const allRequiredUploaded = uploadedCount === requiredCount;
 
   const title = transactionCategory === 'assessment' && assessmentType
-    ? `Upload Documents: ${ASSESSMENT_LABELS[assessmentType]}`
+    ? `Upload Documents: ${ASSESSMENT_LABELS[assessmentType].label}`
     : 'Upload Documents: Certification Request';
 
   return (

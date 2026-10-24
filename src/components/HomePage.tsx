@@ -52,7 +52,7 @@ export default function HomePage({ onApply }: HomePageProps) {
         onClick={onApply}
         className="w-full py-3 bg-[#0072D2] text-white text-sm font-bold rounded-lg hover:bg-[#005fa3] transition-colors"
       >
-        CONTINUE TO APPLICATION FORM
+        CLICK HERE TO MAKE TRANSACTION REQUEST
       </button>
 
       {/* Three Columns */}

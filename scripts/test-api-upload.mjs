@@ -16,7 +16,7 @@ const png = Buffer.from(
 
 function buildMultipart() {
   const boundary = '----iassessUploadTest' + Date.now();
-  const applicationId = 'BAL-UPLOAD-TEST-' + Date.now();
+  const applicationId = 'BLTN-UPLOAD-TEST-' + Date.now();
   const documentType = 'valid_id';
   const fileName = 'pixel.png';
 

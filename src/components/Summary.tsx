@@ -47,7 +47,7 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadPr
             <h3 className="text-xs font-bold text-gray-700">Sub-Classification</h3>
           </div>
           <div className="bg-gray-100 border border-gray-200 rounded-b px-3 py-2">
-            <p className="text-sm text-gray-800">{ASSESSMENT_LABELS[data.assessmentType]}</p>
+            <p className="text-sm text-gray-800">{ASSESSMENT_LABELS[data.assessmentType].label}</p>
           </div>
         </div>
       )}

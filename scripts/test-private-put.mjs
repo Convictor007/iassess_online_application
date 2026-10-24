@@ -34,7 +34,7 @@ const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64',
 );
-const applicationId = 'BAL-LOCAL-PUT-' + Date.now();
+const applicationId = 'BLTN-LOCAL-PUT-' + Date.now();
 const pathname = `${applicationId}/valid_id-${Date.now()}-pixel.png`;
 
 console.log('token_prefix', token.slice(0, 20));

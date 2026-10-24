@@ -37,7 +37,15 @@ export default function AssessmentTypeSelect({
                 : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
             }`}
           >
-            <span className="font-medium text-sm text-gray-800">{ASSESSMENT_LABELS[type]}</span>
+            <span className="font-medium text-sm text-gray-800">
+              {ASSESSMENT_LABELS[type].label}
+            </span>
+            {ASSESSMENT_LABELS[type].purpose && (
+              <span className="block text-[10px] text-gray-500 mt-0.5 leading-snug">
+                <span className="font-semibold text-gray-600">For: </span>
+                {ASSESSMENT_LABELS[type].purpose}
+              </span>
+            )}
           </button>
         ))}
       </div>
