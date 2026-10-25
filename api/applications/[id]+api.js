@@ -1,4 +1,4 @@
-import { getSql } from "../lib/db.mjs";
+import { getSql } from "../../server/lib/db.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 
