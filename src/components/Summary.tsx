@@ -105,8 +105,8 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadPr
         </div>
       )}
 
-      {/* Submission Method */}
-      {data.submissionMethod && (
+      {/* Submission Method — assessment only (certification is always walk-in) */}
+      {data.transactionCategory === 'assessment' && data.submissionMethod && (
         <div className="mb-4">
           <div className="bg-gray-50 rounded-t px-3 py-1.5">
             <h3 className="text-xs font-bold text-gray-700">Submission Method</h3>
@@ -120,6 +120,20 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadPr
                 {Object.keys(data.documents).length} document(s) uploaded
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {data.transactionCategory === 'certification' && (
+        <div className="mb-4">
+          <div className="bg-gray-50 rounded-t px-3 py-1.5">
+            <h3 className="text-xs font-bold text-gray-700">Submission</h3>
+          </div>
+          <div className="bg-gray-100 border border-gray-200 rounded-b px-3 py-2">
+            <p className="text-sm text-gray-800 font-medium">Walk-in — bring documents to the office</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Present this transaction code and your requirements when you visit.
+            </p>
           </div>
         </div>
       )}
@@ -219,12 +233,6 @@ export default function Summary({ data, onBack, onSubmit, isSubmitting, uploadPr
           application, you can return to the previous form by clicking the
           <strong> &ldquo;Return to Application&rdquo;</strong> button.
         </p>
-      </div>
-
-      {/* Reference Number */}
-      <div className="bg-blue-50 border border-[#0072D2]/20 rounded-lg p-3 mb-4">
-        <p className="text-[10px] text-[#0072D2] mb-0.5">Transaction Code</p>
-        <p className="text-lg font-mono font-bold text-[#102E50]">{data.referenceNumber}</p>
       </div>
 
       {/* Upload Progress (shown during submission) */}

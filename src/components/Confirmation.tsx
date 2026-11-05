@@ -8,6 +8,7 @@ interface ConfirmationProps {
 
 export default function Confirmation({ data, onNewApplication }: ConfirmationProps) {
   const isOnline = data.submissionMethod === 'online';
+  const isCertification = data.transactionCategory === 'certification';
 
   return (
     <div className="flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-lg min-h-[400px]">
@@ -55,13 +56,21 @@ export default function Confirmation({ data, onNewApplication }: ConfirmationPro
       <div className="bg-white p-6 sm:w-[60%] flex flex-col">
         <h3 className="text-sm font-bold text-gray-800 mb-2">Application Details</h3>
 
-        {isOnline ? (
+        {isOnline && !isCertification ? (
           <p className="text-xs text-gray-600 mb-4 leading-relaxed">
             Thank you for submitting your application online.
             <br />
             Your documents are now <strong>under review</strong> by our assessment team.
             <br />
             You will receive an email notification once your documents have been verified.
+          </p>
+        ) : isCertification ? (
+          <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+            Thank you for filling out our form.
+            <br />
+            Please bring your requirements and this transaction code to the
+            Municipal Assessor&apos;s Office. Certification requests are processed
+            <strong> walk-in</strong>.
           </p>
         ) : (
           <p className="text-xs text-gray-600 mb-4 leading-relaxed">

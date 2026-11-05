@@ -7,6 +7,8 @@ interface RequestorInfoFormProps {
   onChange: (data: RequestorInfoType) => void;
   onBack: () => void;
   onNext: () => void;
+  /** How the name was prefilled, if at all. */
+  autofillSource?: 'spa' | 'valid_id' | 'owner_default' | null;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,6 +19,7 @@ export default function RequestorInfoForm({
   onChange,
   onBack,
   onNext,
+  autofillSource = null,
 }: RequestorInfoFormProps) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -40,6 +43,24 @@ export default function RequestorInfoForm({
   return (
     <div>
       <h2 className="text-base font-bold text-gray-800 mb-1">Requestor&apos;s Information</h2>
+      {autofillSource && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 mb-3">
+          <div className="flex items-start gap-2">
+            <i className="bi bi-magic text-emerald-600 mt-0.5 shrink-0"></i>
+            <div className="text-[11px] text-emerald-800">
+              {autofillSource === 'spa' && (
+                <><strong>Filled from your scanned SPA.</strong> Confirm the attorney-in-fact details.</>
+              )}
+              {autofillSource === 'valid_id' && (
+                <><strong>Filled from your scanned valid ID.</strong> Confirm it matches the requestor.</>
+              )}
+              {autofillSource === 'owner_default' && (
+                <><strong>Name set to the property owner.</strong> Change it if someone else is transacting (upload an SPA for a representative).</>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <p className="text-[11px] text-gray-500 mb-3">
         Fields marked with <span className="text-red-500">*</span> are required.
       </p>

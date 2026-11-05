@@ -135,7 +135,7 @@ export async function getFullTransaction(referenceNumber) {
 
   // Fetch document reviews
   const reviews = await sql`
-    SELECT doc_type, status, notes, reviewed_at
+    SELECT id, doc_id, doc_type, status, notes, reviewed_at
     FROM document_reviews WHERE trn_id = ${txn.id} ORDER BY created_at
   `;
 
@@ -331,20 +331,13 @@ export async function getDocuments(transactionId) {
 /**
  * Replace citizen-uploaded revision documents on a transaction.
  * @param {number} transactionId
- * @param {Array<{key: string, fileName: string, fileUrl: string, blobPathname?: string|null, mimeType?: string|null}>} uploads
+ * @param {Array<{key: string, fileName: string, fileUrl: string, blobPathname?: string|null, mimeType?: string|null, documentId?: number}>} uploads
  */
 export async function replaceRevisionDocuments(transactionId, uploads) {
   const sql = getSql();
   for (const u of uploads) {
-    const [existing] = await sql`
-      SELECT id FROM documents
-      WHERE trn_id = ${transactionId} AND doc_type = ${u.key}
-      ORDER BY uploaded_at DESC, id DESC
-      LIMIT 1
-    `;
-
     let documentId;
-    if (existing) {
+    if (u.documentId) {
       const [updated] = await sql`
         UPDATE documents
         SET file_name = ${u.fileName},
@@ -352,34 +345,71 @@ export async function replaceRevisionDocuments(transactionId, uploads) {
             blob_pathname = ${u.blobPathname || null},
             mime_type = ${u.mimeType || null},
             uploaded_at = NOW()
-        WHERE id = ${existing.id}
+        WHERE id = ${u.documentId}
+          AND trn_id = ${transactionId}
+          AND doc_type = ${u.key}
         RETURNING id
       `;
+      if (!updated) {
+        throw new Error(`Revision target document ${u.documentId} no longer matches ${u.key}.`);
+      }
       documentId = updated.id;
     } else {
-      const [inserted] = await sql`
-        INSERT INTO documents (trn_id, doc_type, file_name, file_url, blob_pathname, mime_type)
-        VALUES (${transactionId}, ${u.key}, ${u.fileName}, ${u.fileUrl}, ${u.blobPathname || null}, ${u.mimeType || null})
-        RETURNING id
+      const [existing] = await sql`
+        SELECT id FROM documents
+        WHERE trn_id = ${transactionId} AND doc_type = ${u.key}
+        ORDER BY uploaded_at DESC, id DESC
+        LIMIT 1
       `;
-      documentId = inserted.id;
+      if (existing) {
+        const [updated] = await sql`
+          UPDATE documents
+          SET file_name = ${u.fileName},
+              file_url = ${u.fileUrl},
+              blob_pathname = ${u.blobPathname || null},
+              mime_type = ${u.mimeType || null},
+              uploaded_at = NOW()
+          WHERE id = ${existing.id}
+            AND trn_id = ${transactionId}
+            AND doc_type = ${u.key}
+          RETURNING id
+        `;
+        if (!updated) {
+          throw new Error(`Revision target document ${existing.id} no longer matches ${u.key}.`);
+        }
+        documentId = updated.id;
+      } else {
+        const [inserted] = await sql`
+          INSERT INTO documents (trn_id, doc_type, file_name, file_url, blob_pathname, mime_type)
+          VALUES (${transactionId}, ${u.key}, ${u.fileName}, ${u.fileUrl}, ${u.blobPathname || null}, ${u.mimeType || null})
+          RETURNING id
+        `;
+        documentId = inserted.id;
+      }
     }
 
     const [review] = await sql`
       SELECT id FROM document_reviews
-      WHERE trn_id = ${transactionId} AND doc_type = ${u.key}
-      ORDER BY created_at DESC, id DESC
+      WHERE trn_id = ${transactionId}
+        AND doc_type = ${u.key}
+        AND (doc_id = ${documentId} OR doc_id IS NULL)
+      ORDER BY CASE WHEN doc_id = ${documentId} THEN 0 ELSE 1 END, created_at DESC, id DESC
       LIMIT 1
     `;
     if (review) {
       await sql`
         UPDATE document_reviews
         SET doc_id = ${documentId},
-            status = 'pending',
+            status = 'revised',
             notes = NULL,
             reviewed_by = NULL,
             reviewed_at = NULL
         WHERE id = ${review.id}
+      `;
+    } else {
+      await sql`
+        INSERT INTO document_reviews (trn_id, doc_id, doc_type, status)
+        VALUES (${transactionId}, ${documentId}, ${u.key}, 'revised')
       `;
     }
   }

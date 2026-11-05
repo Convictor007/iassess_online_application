@@ -106,6 +106,7 @@ export default function HomePage({ onApply }: HomePageProps) {
                 <span className={`font-bold capitalize ${
                   trackingResult.status === 'completed' ? 'text-green-600' :
                   trackingResult.status === 'approved' || trackingResult.status === 'scheduled' ? 'text-blue-600' :
+                  trackingResult.status === 'ready_for_pickup' ? 'text-teal-600' :
                   trackingResult.status === 'processing' ? 'text-indigo-600' :
                   trackingResult.status === 'needs_revision' ? 'text-amber-600' :
                   trackingResult.status === 'rejected' || trackingResult.status === 'cancelled' || trackingResult.status === 'expired' ? 'text-red-600' :
@@ -138,11 +139,12 @@ export default function HomePage({ onApply }: HomePageProps) {
                       <div key={i} className="flex justify-between items-center">
                         <span className="capitalize">{review.doc_type.replace(/_/g, ' ')}</span>
                         <span className={`font-medium ${
+                          review.status === 'revised' ? 'text-blue-600' :
                           review.status === 'approved' ? 'text-green-600' :
                           review.status === 'needs_revision' ? 'text-amber-600' :
                           review.status === 'rejected' ? 'text-red-600' :
                           'text-gray-500'
-                        }`}>{review.status.replace(/_/g, ' ')}</span>
+                        }`}>{review.status === 'revised' ? 'Revised — Under Review' : review.status.replace(/_/g, ' ')}</span>
                       </div>
                     ))}
                   </div>
@@ -163,9 +165,19 @@ export default function HomePage({ onApply }: HomePageProps) {
               )}
 
               {/* Status-specific messages */}
-              {trackingResult.status === 'approved' && (
+              {(trackingResult.status === 'approved' || trackingResult.status === 'verified') && (
                 <div className="mt-1.5 p-1.5 bg-green-50 rounded border border-green-200 text-[9px] text-green-800">
-                  Your documents are approved! Please visit the Municipal Assessor's Office with your original documents.
+                  Your documents are verified. The office will notify you when your document is ready for pickup.
+                </div>
+              )}
+              {trackingResult.status === 'ready_for_pickup' && (
+                <div className="mt-1.5 p-1.5 bg-teal-50 rounded border border-teal-200 text-[9px] text-teal-800">
+                  Your document is ready for pickup. Bring your application reference number and a valid government-issued ID to the Municipal Assessor's Office.
+                </div>
+              )}
+              {trackingResult.status === 'completed' && (
+                <div className="mt-1.5 p-1.5 bg-green-50 rounded border border-green-200 text-[9px] text-green-800">
+                  This application is complete. The document has been marked as claimed.
                 </div>
               )}
               {trackingResult.status === 'needs_revision' && (

@@ -2,6 +2,9 @@ import type { AssessmentType, DocumentType, PendingDocument, CertificationType }
 import { ASSESSMENT_LABELS } from '../data/transactions';
 import DocumentUploader from './DocumentUploader';
 import NavButtons from './NavButtons';
+import type { OcrStatusMap } from '../lib/ocr-autofill';
+import type { ValidationMap } from '../lib/ocr-controller';
+import type { DocValidation } from '../lib/gemini-doc';
 
 interface DocumentConfig {
   type: DocumentType;
@@ -40,7 +43,7 @@ const ASSESSMENT_DOCUMENTS: Record<AssessmentType, DocumentConfig[]> = {
 const CERTIFICATION_DOCUMENTS: DocumentConfig[] = [
   { type: 'valid_id', label: 'Photocopy of Valid I.D. of the Owner', required: true },
   { type: 'spa', label: 'Special Power of Attorney (SPA) from the registered owner/s', required: true },
-  { type: 'purpose_letter', label: 'Purpose of request must be indicated', required: true },
+  { type: 'purpose_letter', label: 'Purpose of request — write it yourself on a piece of paper', required: true },
 ];
 
 const MAX_FILES_PER_TYPE = 3;
@@ -54,6 +57,9 @@ interface DocumentUploadProps {
   onDocumentRemove: (type: DocumentType, index: number) => void;
   onBack: () => void;
   onNext: () => void;
+  ocrStatuses?: OcrStatusMap;
+  validations?: ValidationMap;
+  describeValidation?: (v: DocValidation | undefined) => string | null;
 }
 
 export default function DocumentUpload({
@@ -64,6 +70,9 @@ export default function DocumentUpload({
   onDocumentRemove,
   onBack,
   onNext,
+  ocrStatuses = {},
+  validations = {},
+  describeValidation,
 }: DocumentUploadProps) {
   const docs: DocumentConfig[] = transactionCategory === 'assessment' && assessmentType
     ? ASSESSMENT_DOCUMENTS[assessmentType]
@@ -73,15 +82,45 @@ export default function DocumentUpload({
   const uploadedCount = docs.filter(d => d.required && documents[d.type] && documents[d.type]!.length > 0).length;
   const allRequiredUploaded = uploadedCount === requiredCount;
 
+  const stillAnalyzing =
+    Object.values(ocrStatuses).some((s) => s?.status === 'processing');
+
+  const uploadedTypes = Object.entries(documents)
+    .filter(([, files]) => (files?.length ?? 0) > 0)
+    .map(([type]) => type as DocumentType);
+
+  const failedUploads = uploadedTypes
+    .map((t) => ({ t, v: validations[t] }))
+    .filter((x) => x.v && (x.v.severity === 'error' || !x.v.valid));
+
+  const warningUploads = uploadedTypes
+    .map((t) => ({ t, v: validations[t] }))
+    .filter((x) => x.v?.valid && x.v.severity === 'warning');
+
+  const allUploadedValidated = uploadedTypes.every((t) => Boolean(validations[t]));
+  const allClean =
+    allUploadedValidated &&
+    failedUploads.length === 0 &&
+    warningUploads.length === 0 &&
+    uploadedTypes.length > 0;
+
   const title = transactionCategory === 'assessment' && assessmentType
     ? `Upload Documents: ${ASSESSMENT_LABELS[assessmentType].label}`
     : 'Upload Documents: Certification Request';
+
+  // Continue stays enabled once required files are in — validation is a modal, not a hard block
+  const nextDisabled = !allRequiredUploaded || stillAnalyzing;
+  const nextLabel = stillAnalyzing
+    ? 'Analyzing…'
+    : 'Continue';
 
   return (
     <div>
       <h2 className="text-base font-bold text-gray-800 mb-1">{title}</h2>
       <p className="text-[11px] text-gray-500 mb-3">
-        Upload clear photos or scans of your required documents. You can upload up to {MAX_FILES_PER_TYPE} files per document type.
+        Upload clear, straight photos of your required documents. We scan and
+        validate them, then pre-fill the next forms. If something looks off,
+        Continue will show a warning — you can cancel or proceed anyway.
       </p>
 
       {/* Progress indicator */}
@@ -111,7 +150,10 @@ export default function DocumentUpload({
         <div className="flex items-start gap-2">
           <i className="bi bi-info-circle-fill text-blue-600 mt-0.5 shrink-0"></i>
           <div className="text-xs text-blue-800">
-            <strong>Files are stored locally.</strong> They will be uploaded to the server only when you submit your application. You can remove or replace files before submitting. Up to {MAX_FILES_PER_TYPE} files per document type.
+            <strong>Document scanning.</strong> We check photo quality and that each file
+            matches the required type. A tilted Valid ID is accepted as a
+            <em> warning</em> when the name is readable. Tax Declaration, SPA, and Valid ID
+            details are filled into the next forms from the scan. Files upload to the server only on final submit.
           </div>
         </div>
       </div>
@@ -121,13 +163,31 @@ export default function DocumentUpload({
         {docs.map((doc) => {
           const files = documents[doc.type] ?? [];
           const hasFiles = files.length > 0;
+          const ocr = ocrStatuses[doc.type];
+          const validation = validations[doc.type];
+          const tone =
+            validation?.severity === 'error' || (validation && !validation.valid)
+              ? 'error'
+              : validation?.severity === 'warning'
+                ? 'warning'
+                : validation?.valid
+                  ? 'ok'
+                  : hasFiles
+                    ? 'pending'
+                    : 'idle';
           return (
             <div
               key={doc.type}
               className={`border rounded-xl p-4 transition-colors ${
-                hasFiles
-                  ? 'border-green-200 bg-green-50/30'
-                  : 'border-gray-200 bg-gray-50/50'
+                tone === 'error'
+                  ? 'border-red-200 bg-red-50/40'
+                  : tone === 'warning'
+                    ? 'border-amber-300 bg-amber-50/50'
+                    : tone === 'ok'
+                      ? 'border-green-200 bg-green-50/30'
+                      : hasFiles
+                        ? 'border-green-200 bg-green-50/30'
+                        : 'border-gray-200 bg-gray-50/50'
               }`}
             >
               <DocumentUploader
@@ -138,6 +198,9 @@ export default function DocumentUpload({
                 maxFiles={MAX_FILES_PER_TYPE}
                 onAdd={(d) => onDocumentAdd(doc.type, d)}
                 onRemove={(index) => onDocumentRemove(doc.type, index)}
+                ocrStatus={ocr}
+                validation={validation}
+                describeValidation={describeValidation}
               />
             </div>
           );
@@ -156,11 +219,72 @@ export default function DocumentUpload({
         </div>
       )}
 
+      {stillAnalyzing && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center gap-2 text-xs text-blue-800">
+            <i className="bi bi-hourglass-split animate-pulse"></i>
+            <span>
+              <strong>Scanning documents…</strong>{' '}
+              Continue unlocks when scanning finishes.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {!stillAnalyzing && allClean && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
+          <div className="flex items-start gap-2 text-xs text-emerald-800">
+            <i className="bi bi-check2-circle mt-0.5 shrink-0"></i>
+            <div>
+              <strong>All {uploadedTypes.length} uploaded document{uploadedTypes.length === 1 ? '' : 's'} accepted.</strong>{' '}
+              Property and requestor forms will open with details from your scanned documents.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!stillAnalyzing && (failedUploads.length > 0 || warningUploads.length > 0) && (
+        <div
+          className={`rounded-lg p-3 mb-4 border ${
+            failedUploads.length > 0
+              ? 'bg-red-50 border-red-200'
+              : 'bg-amber-50 border-amber-200'
+          }`}
+        >
+          <div
+            className={`flex items-start gap-2 text-xs ${
+              failedUploads.length > 0 ? 'text-red-800' : 'text-amber-900'
+            }`}
+          >
+            <i
+              className={`mt-0.5 shrink-0 ${
+                failedUploads.length > 0 ? 'bi bi-emoji-frown text-red-600' : 'bi bi-exclamation-triangle text-amber-600'
+              }`}
+            ></i>
+            <div>
+              <strong className="block mb-1">
+                {failedUploads.length > 0
+                  ? 'Some documents need attention (Continue will ask you to confirm):'
+                  : 'Warnings (Continue will ask you to confirm):'}
+              </strong>
+              <ul className="list-disc pl-4 space-y-1">
+                {[...failedUploads, ...warningUploads].map(({ t, v }) => (
+                  <li key={t} className="whitespace-pre-wrap break-words">
+                    <span className="font-medium capitalize">{t.replace(/_/g, ' ')}:</span>{' '}
+                    {describeValidation?.(v) ?? v?.message ?? 'Needs review'}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       <NavButtons
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={!allRequiredUploaded}
-        nextLabel="Continue"
+        nextDisabled={nextDisabled}
+        nextLabel={nextLabel}
       />
     </div>
   );

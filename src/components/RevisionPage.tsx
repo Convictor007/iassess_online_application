@@ -40,6 +40,8 @@ export default function RevisionPage() {
   const [data, setData] = useState<RevisionData | null>(null);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadStage, setUploadStage] = useState<'preparing' | 'uploading' | null>(null);
   const [error, setError] = useState('');
 
   // Captured before the early returns below — TS aliased-condition narrowing
@@ -90,6 +92,11 @@ export default function RevisionPage() {
 
   const pickFile = (key: string, file: File | null) => {
     setFiles((prev) => ({ ...prev, [key]: file }));
+    setUploadProgress((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
   const allSelected = !!data && data.items.every((it) => files[it.key] instanceof File);
@@ -112,6 +119,8 @@ export default function RevisionPage() {
         if (!(raw instanceof File)) throw new Error(`Missing file for: ${item.label}`);
 
         setUploadingKey(item.key);
+        setUploadStage('preparing');
+        setUploadProgress((prev) => ({ ...prev, [item.key]: 0 }));
         const file = await compressImage(raw);
 
         const fd = new FormData();
@@ -119,11 +128,40 @@ export default function RevisionPage() {
         fd.append('applicationId', data.referenceNumber);
         fd.append('documentType', item.key);
 
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        const json = await res.json().catch(() => null);
-        if (!res.ok || !json?.url) {
-          throw new Error(json?.error || `Upload failed for: ${item.label}`);
-        }
+        setUploadStage('uploading');
+        const json = await new Promise<{ url: string; pathname?: string }>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/upload');
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              setUploadProgress((prev) => ({
+                ...prev,
+                [item.key]: Math.round((event.loaded / event.total) * 100),
+              }));
+            }
+          };
+          xhr.onload = () => {
+            let response: { url?: string; pathname?: string; error?: string } | null = null;
+            try {
+              response = JSON.parse(xhr.responseText) as {
+                url?: string;
+                pathname?: string;
+                error?: string;
+              };
+            } catch {
+              response = null;
+            }
+            if (xhr.status >= 200 && xhr.status < 300 && response?.url) {
+              setUploadProgress((prev) => ({ ...prev, [item.key]: 100 }));
+              resolve({ url: response.url, pathname: response.pathname });
+              return;
+            }
+            reject(new Error(response?.error || `Upload failed for: ${item.label} (HTTP ${xhr.status}).`));
+          };
+          xhr.onerror = () => reject(new Error(`Network error while uploading ${item.label}. Check your connection and retry.`));
+          xhr.onabort = () => reject(new Error(`Upload cancelled for ${item.label}.`));
+          xhr.send(fd);
+        });
         uploads.push({
           key: item.key,
           fileName: file.name,
@@ -134,6 +172,7 @@ export default function RevisionPage() {
       }
 
       setUploadingKey(null);
+      setUploadStage(null);
 
       const submitRes = await fetch('/api/revision', {
         method: 'POST',
@@ -150,6 +189,7 @@ export default function RevisionPage() {
       setPhase('ready');
     } finally {
       setUploadingKey(null);
+      setUploadStage(null);
     }
   };
 
@@ -283,6 +323,7 @@ export default function RevisionPage() {
                 const file = files[item.key];
                 const selected = file instanceof File;
                 const busy = uploadingKey === item.key;
+                const progress = uploadProgress[item.key] ?? 0;
                 return (
                   <div key={item.key} className="border border-gray-200 rounded-md p-3">
                     <div className="flex items-start justify-between gap-3 mb-2">
@@ -325,7 +366,30 @@ export default function RevisionPage() {
                         onChange={(e) => pickFile(item.key, e.target.files?.[0] ?? null)}
                       />
                     </label>
-                    {busy && <p className="text-xs text-blue-600 mt-1">Uploading…</p>}
+                    {busy && (
+                      <div className="mt-3" aria-live="polite">
+                        <div className="flex items-center justify-between text-xs text-blue-700 mb-1">
+                          <span>{uploadStage === 'preparing' ? 'Preparing file…' : 'Uploading…'}</span>
+                          {uploadStage === 'uploading' && <span>{progress}%</span>}
+                        </div>
+                        <div
+                          className="h-2 w-full overflow-hidden rounded-full bg-blue-100"
+                          role="progressbar"
+                          aria-label={`Uploading ${item.label}`}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={uploadStage === 'preparing' ? 0 : progress}
+                        >
+                          <div
+                            className="h-full rounded-full bg-blue-700 transition-[width] duration-200"
+                            style={{ width: `${uploadStage === 'preparing' ? 5 : progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {!busy && progress === 100 && isSubmitting && (
+                      <p className="text-xs text-green-700 mt-2">Upload complete</p>
+                    )}
                   </div>
                 );
               })}

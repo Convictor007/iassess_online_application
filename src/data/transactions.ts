@@ -227,7 +227,7 @@ export const CERT_REQUIREMENTS: { copies: number; label: string; whereToGet: str
   { copies: 1, label: 'Photocopy of Valid I.D. of the Owner', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Any valid government-issued ID (Passport, Driver\'s License, PhilSys ID, SSS ID, etc.).' },
   { copies: 1, label: 'Photocopy of Valid I.D. of the Requestor', whereToGet: 'Self-prepared (photocopy shop)', guide: 'Separate from the owner\'s ID. Even if you are the owner, you need your own ID photocopy.' },
   { copies: 1, label: 'Special Power of Attorney (SPA) from the registered owner/s or compulsory heirs — per RA 10173 (Data Privacy Act of 2012)', whereToGet: 'Notary Public — Balatan, Nabua, or Iriga City', guide: 'Required when the requestor is not the owner. Must authorize the requestor to obtain certification(s) from the Municipal Assessor\'s Office of Balatan. Fee: ₱100-₱300. Processing: Same day.' },
-  { copies: 1, label: 'Purpose of request must be indicated', whereToGet: 'Self-prepared', guide: 'Write the purpose (e.g., "for bank loan", "for insurance", "for estate tax", "for personal records"). Include in the application form.' },
+  { copies: 1, label: 'Purpose of request must be indicated', whereToGet: 'Write it yourself on a piece of paper', guide: 'On a plain piece of paper, write why you need this document — for example: “For bank loan”, “For insurance”, “For estate tax”, or “For personal records”. Sign it and bring the paper with you. No need for a lawyer or notary.' },
   { copies: 1, label: 'Property identification — Tax Declaration No., lot no., barangay, and owner name', whereToGet: 'Self-prepared / from TD or title', guide: 'Needed so MASSO can verify Tax Declaration and Field Appraisal files.' },
   { copies: 1, label: 'Certification fee — ₱100.00', whereToGet: 'Municipal Treasurer\'s Office (MTO) — Balatan', guide: 'Pay at MTO and keep the Official Receipt. Submit the OR to MASSO before release. Tax mapping / location products may be free (fee NONE).' },
 ];
@@ -634,20 +634,44 @@ export const DOCUMENT_GUIDES: Record<string, DocumentGuide> = {
   },
 
   'Purpose of request must be indicated': {
-    title: 'How to Write the Purpose of Request',
-    office: 'N/A — self-prepared',
-    location: 'N/A',
+    title: 'How to Write the Purpose of Request (DIY)',
+    office: 'Write it yourself at home — no office visit needed',
+    location: 'Anywhere — just a piece of paper and a pen',
     whatToBring: [
-      'Knowledge of why you need the document',
+      'A plain piece of paper',
+      'A pen',
+      'Your knowledge of why you need the document (e.g. bank loan, insurance, estate tax)',
     ],
     steps: [
-      { step: 'Determine the purpose', details: 'Common purposes include: bank loan/mortgage, insurance claim, personal records, legal proceedings, property verification, or any other official use.' },
-      { step: 'Write a brief statement', details: 'Write a clear and concise statement, e.g., "For bank loan processing", "For insurance claim", "For personal records and file", or "For legal proceedings before the courts of Balatan".' },
-      { step: 'Include in your application', details: 'Write this purpose in the application form or in a separate letter of request addressed to the Municipal Assessor.' },
+      { step: 'Get a piece of paper', details: 'Any plain paper is fine — notebook paper, bond paper, or even a clean half-sheet. No special form required.' },
+      { step: 'Write why you need it', details: 'Write in your own words, for example: “I need a Certified True Copy of Tax Declaration for bank loan processing.” or simply “For bank loan.” Common reasons: bank loan, insurance, estate tax, court case, personal records.' },
+      { step: 'Add your name, date, and signature', details: 'Put your full name, the date, and sign at the bottom so the office knows who wrote it.' },
+      { step: 'Bring it when you transact', details: 'Hand this paper to the Assessor staff along with your other requirements. You can also type it if you prefer — handwritten is perfectly fine.' },
     ],
-    fees: 'None',
-    processingTime: 'Same day',
-    tips: 'Be specific but concise. If for a bank loan, mention the bank name. If for legal proceedings, mention the case number if available.',
+    fees: 'None — DIY on paper',
+    processingTime: 'Same day (as soon as you hand it in)',
+    tips: 'Keep it short and clear. Example: “Purpose: For estate tax of the late [name].” You do not need a notary public for this — just write it yourself.',
+    exampleFormat: {
+      heading: 'Example — write something like this on paper',
+      body: `To: Municipal Assessor's Office
+Balatan, Camarines Sur
+
+I, [Your Full Name], of legal age, Filipino, and residing at [Your Address], respectfully state that:
+
+PURPOSE OF REQUEST:
+For bank loan processing / For insurance claim / For estate tax / For personal records
+(choose what applies to you)
+
+Document requested:
+Certified True Copy of Tax Declaration
+(or the certification you are applying for)
+
+Date: ____ / ____ / ______
+
+(Signature)
+[Your Full Name]`,
+      note: 'Handwritten is OK. You may shorten it to 2–3 lines. No notary needed — just your name, purpose, date, and signature.',
+    },
   },
 
   'Photocopy of Valid I.D. of Requestor': {

@@ -71,6 +71,7 @@ async function handlePost(req, res) {
   }
 
   const allowedKeys = new Set(payload.items.map((it) => it.key));
+  const revisionItemsByKey = new Map(payload.items.map((it) => [it.key, it]));
   const uploadedKeys = new Set();
   const clean = [];
   for (const u of uploads) {
@@ -86,7 +87,14 @@ async function handlePost(req, res) {
       });
     }
     uploadedKeys.add(key);
-    clean.push({ key, fileName, fileUrl, blobPathname, mimeType });
+    clean.push({
+      key,
+      fileName,
+      fileUrl,
+      blobPathname,
+      mimeType,
+      documentId: revisionItemsByKey.get(key)?.documentId,
+    });
   }
 
   if (uploadedKeys.size !== allowedKeys.size) {

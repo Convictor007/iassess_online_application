@@ -8,6 +8,8 @@ interface PropertyInfoFormProps {
   onChange: (data: PropertyInfoType) => void;
   onBack: () => void;
   onNext: () => void;
+  /** Document type that prefilled fields, if any. */
+  autofillSource?: 'tax_declaration' | 'spa' | 'valid_id' | 'title' | 'deed_of_sale' | null;
 }
 
 const isValidTaxDeclaration = (value: string) => {
@@ -22,6 +24,7 @@ export default function PropertyInfoForm({
   onChange,
   onBack,
   onNext,
+  autofillSource = null,
 }: PropertyInfoFormProps) {
   const [localTaxDec, setLocalTaxDec] = useState('');
 
@@ -74,6 +77,18 @@ export default function PropertyInfoForm({
 
   return (
     <div>
+      {autofillSource && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
+          <div className="flex items-start gap-2">
+            <i className="bi bi-magic text-emerald-600 mt-0.5 shrink-0"></i>
+            <div className="text-xs text-emerald-800">
+              <strong>Information filled from your scanned document.</strong>{' '}
+              Review each field and edit anything incorrect before continuing.
+            </div>
+          </div>
+        </div>
+      )}
+
       <p className="text-xs text-red-500 mb-4">* Required Fields</p>
 
       <div className="space-y-5">

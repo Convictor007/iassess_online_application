@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import type { DocumentType, PendingDocument } from '../types';
+import type { OcrDocProgress } from '../lib/ocr-autofill';
+import { ISSUE_LABELS, type DocValidation } from '../lib/gemini-doc';
 
 interface DocumentUploaderProps {
   documentType: DocumentType;
@@ -9,6 +11,11 @@ interface DocumentUploaderProps {
   maxFiles: number;
   onAdd: (doc: PendingDocument) => void;
   onRemove: (index: number) => void;
+  /** Background analysis status for this document type (if tracked). */
+  ocrStatus?: OcrDocProgress;
+  /** Document scan / validation result */
+  validation?: DocValidation;
+  describeValidation?: (v: DocValidation | undefined) => string | null;
 }
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -24,6 +31,157 @@ function isImage(type: string) {
   return type.startsWith('image/');
 }
 
+/** Full validation UI — never truncate the scan result message. */
+function ValidationPanel({
+  ocrStatus,
+  validation,
+  describeValidation,
+}: {
+  ocrStatus: OcrDocProgress;
+  validation?: DocValidation;
+  describeValidation?: (v: DocValidation | undefined) => string | null;
+}) {
+  const severity = !validation
+    ? 'pending'
+    : validation.severity === 'error' || !validation.valid
+      ? 'error'
+      : validation.severity === 'warning'
+        ? 'warning'
+        : 'ok';
+
+  const tone =
+    severity === 'error'
+      ? 'border-red-200 bg-red-50'
+      : severity === 'warning'
+        ? 'border-amber-300 bg-amber-50'
+        : severity === 'ok'
+          ? 'border-emerald-200 bg-emerald-50'
+          : 'border-blue-100 bg-blue-50';
+
+  const headerText =
+    severity === 'error'
+      ? 'text-red-900'
+      : severity === 'warning'
+        ? 'text-amber-900'
+        : severity === 'ok'
+          ? 'text-emerald-900'
+          : 'text-blue-900';
+
+  const barColor =
+    severity === 'error'
+      ? 'bg-red-500'
+      : severity === 'warning'
+        ? 'bg-amber-500'
+        : severity === 'ok'
+          ? 'bg-green-500'
+          : ocrStatus.status === 'skipped'
+            ? 'bg-gray-400'
+            : 'bg-blue-500';
+
+  const detail = validation
+    ? (describeValidation?.(validation) ?? validation.message)
+    : ocrStatus.message;
+
+  const issueLabels = validation?.issues.length
+    ? validation.issues
+    : [];
+
+  return (
+    <div className={`mb-2 rounded-lg border px-3 py-2.5 ${tone}`}>
+      <div className="flex items-start justify-between gap-3 mb-1.5">
+        <div className={`flex items-start gap-1.5 text-xs font-medium ${headerText} min-w-0`}>
+          {ocrStatus.status === 'processing' && (
+            <i className="bi bi-hourglass-split animate-pulse shrink-0 mt-0.5"></i>
+          )}
+          {severity === 'error' && ocrStatus.status !== 'processing' && (
+            <i className="bi bi-x-octagon-fill text-red-600 shrink-0 mt-0.5"></i>
+          )}
+          {severity === 'warning' && ocrStatus.status !== 'processing' && (
+            <i className="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 mt-0.5"></i>
+          )}
+          {severity === 'ok' && ocrStatus.status !== 'processing' && (
+            <i className="bi bi-check-circle-fill text-green-600 shrink-0 mt-0.5"></i>
+          )}
+          {severity === 'pending' && (
+            <i className="bi bi-info-circle text-blue-600 shrink-0 mt-0.5"></i>
+          )}
+          <span className="font-semibold">
+            {severity === 'error'
+              ? 'Needs attention'
+              : severity === 'warning'
+                ? 'Warning — accepted with notes'
+                : severity === 'ok'
+                  ? 'Accepted'
+                  : 'Analyzing…'}
+          </span>
+        </div>
+        <span className="text-[11px] tabular-nums text-gray-600 shrink-0">
+          {ocrStatus.status === 'processing' ? `${ocrStatus.progress}%` : ''}
+        </span>
+      </div>
+
+      <div className="h-1.5 bg-black/10 rounded-full overflow-hidden mb-2">
+        <div
+          className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+          style={{
+            width: `${Math.max(ocrStatus.progress, ocrStatus.status === 'processing' ? 4 : 0)}%`,
+          }}
+        />
+      </div>
+
+      {/* FULL message — wrap, never ellipsis */}
+      {detail && (
+        <p
+          className={`text-xs leading-relaxed whitespace-pre-wrap break-words ${
+            severity === 'error'
+              ? 'text-red-900'
+              : severity === 'warning'
+                ? 'text-amber-950'
+                : severity === 'ok'
+                  ? 'text-emerald-900'
+                  : 'text-blue-900'
+          }`}
+        >
+          {detail}
+        </p>
+      )}
+
+      {issueLabels.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-1.5">
+          {issueLabels.map((code) => (
+            <li
+              key={code}
+              className={`text-[11px] px-2 py-0.5 rounded-full ${
+                severity === 'error'
+                  ? 'bg-red-100 text-red-800'
+                  : severity === 'warning'
+                    ? 'bg-amber-100 text-amber-900'
+                    : 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              {ISSUE_LABELS[code] ?? code}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {severity === 'ok' && validation && validation.confidence > 0 && (
+        <p className="text-[11px] text-emerald-800 mt-1.5">
+          Scan confidence {(validation.confidence * 100).toFixed(0)}%
+        </p>
+      )}
+      {severity === 'warning' && validation && (
+        <p className="text-[11px] text-amber-800 mt-1.5">
+          {validation.confidence > 0
+            ? `Scan confidence ${(validation.confidence * 100).toFixed(0)}% · `
+            : ''}
+          Continue will ask you to confirm
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function DocumentUploader({
   label,
   required,
@@ -31,6 +189,9 @@ export default function DocumentUploader({
   maxFiles,
   onAdd,
   onRemove,
+  ocrStatus,
+  validation,
+  describeValidation,
 }: DocumentUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +276,23 @@ export default function DocumentUploader({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Background analysis + validation for this document type */}
+      {files.length > 0 && ocrStatus && ocrStatus.status !== 'idle' && (
+        <ValidationPanel
+          ocrStatus={ocrStatus}
+          validation={validation}
+          describeValidation={describeValidation}
+        />
+      )}
+
+      {/* No status yet but files present — show waiting chip */}
+      {files.length > 0 && (!ocrStatus || ocrStatus.status === 'idle') && (
+        <div className="mb-2 rounded-lg border border-blue-100 bg-blue-50/50 px-2.5 py-2 text-[11px] text-blue-800 flex items-center gap-1">
+          <i className="bi bi-hourglass-split animate-pulse"></i>
+          Waiting to analyze…
         </div>
       )}
 

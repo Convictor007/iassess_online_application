@@ -5,10 +5,64 @@ import {
   updateTransactionStatus,
 } from "./_lib/repository.mjs";
 import { buildStatusEmailHtml } from "./_lib/email-template-status.mjs";
+import { buildOnlineEmailHtml } from "./_lib/email-template-online.mjs";
+import { buildEmailHtml } from "./_lib/email-template.mjs";
 import { sendEmail } from "./_lib/mailer.mjs";
 import { getCertificationFee } from "./_lib/constants.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
+
+async function notifyAssessorsOfOnlineApplication({ applicationId, referenceNumber }) {
+  const mobileApiUrl = process.env.IASSESS_MOBILE_API_URL?.trim().replace(/\/+$/, "");
+  const sharedSecret = process.env.PUSH_NOTIFICATION_SHARED_SECRET?.trim();
+  if (!mobileApiUrl || !sharedSecret) {
+    console.error("New-application push was not attempted: IASSESS_MOBILE_API_URL or PUSH_NOTIFICATION_SHARED_SECRET is not configured.", {
+      applicationId,
+      referenceNumber,
+    });
+    return;
+  }
+
+  const endpoint = `${mobileApiUrl}/api/notifications/new-application`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-iassess-push-secret": sharedSecret,
+      },
+      body: JSON.stringify({ applicationId, referenceNumber }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+      console.error("New-application push request failed.", {
+        applicationId,
+        status: response.status,
+        code: result?.code,
+        message: result?.message,
+      });
+      return;
+    }
+
+    const result = await response.json().catch(() => null);
+    console.info("New-application push sent.", {
+      applicationId,
+      sent: result?.sent ?? 0,
+      failed: result?.failed ?? 0,
+    });
+  } catch (error) {
+    console.error("New-application push request failed.", {
+      applicationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -92,7 +146,72 @@ export default async function handler(req, res) {
         })),
       });
 
-      return res.status(200).json({ success: true, referenceNumber, id: trnId });
+      if (submissionMethodValue === "online") {
+        await notifyAssessorsOfOnlineApplication({
+          applicationId: Number(trnId),
+          referenceNumber,
+        });
+      }
+
+      // Server-side confirmation email — client fire-and-forget can fail silently.
+      let emailSent = false;
+      let emailError = null;
+      try {
+        const isOnline = submissionMethodValue === "online";
+        const html = isOnline
+          ? buildOnlineEmailHtml({
+              referenceNumber,
+              transactionCategory,
+              assessmentType,
+              certificationSelections,
+              submissionMethod: submissionMethodValue,
+              requestorName,
+              requestorEmail,
+              requestorContact,
+              requestorAddress,
+              purpose,
+              propertyName: ownerName,
+              taxDeclarations,
+              titleNo,
+              lotNo,
+              blockNo,
+              streetName,
+              barangay,
+            })
+          : buildEmailHtml({
+              referenceNumber,
+              transactionCategory,
+              assessmentType,
+              certificationSelections,
+              submissionMethod: submissionMethodValue,
+              requestorName,
+              requestorEmail,
+              requestorContact,
+              requestorAddress,
+              purpose,
+              propertyName: ownerName,
+              taxDeclarations,
+              titleNo,
+              lotNo,
+              blockNo,
+              streetName,
+              barangay,
+            });
+        const categoryLabel =
+          transactionCategory === "assessment" ? "Assessment Transaction" : "Certification Request";
+        const prefix = isOnline ? "[Online]" : "[Walk-in]";
+        await sendEmail({
+          to: requestorEmail,
+          subject: `${prefix} Application Received - ${referenceNumber} | ${categoryLabel}`,
+          html,
+        });
+        emailSent = true;
+      } catch (emailErr) {
+        emailError = emailErr?.message || "email failed";
+        console.error("POST /api/applications confirmation email failed:", emailError);
+      }
+
+      return res.status(200).json({ success: true, referenceNumber, id: trnId, emailSent, emailError });
     } catch (err) {
       console.error("POST /api/applications error:", err?.message, err?.stack);
       return res.status(500).json({ error: "Failed to submit application", detail: err?.message });

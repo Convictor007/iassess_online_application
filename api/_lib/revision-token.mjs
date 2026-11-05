@@ -50,7 +50,13 @@ export function verifyRevisionToken(token) {
         it.key &&
         it.label
     )
-    .map((it) => ({ key: it.key, label: it.label }));
+    .map((it) => ({
+      key: it.key,
+      label: it.label,
+      ...(Number.isSafeInteger(it.documentId) && it.documentId > 0
+        ? { documentId: it.documentId }
+        : {}),
+    }));
   if (items.length === 0) return null;
 
   return { trnId: payload.t, referenceNumber: payload.r, items, expiresAt: payload.e };

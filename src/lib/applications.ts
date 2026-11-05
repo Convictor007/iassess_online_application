@@ -38,6 +38,8 @@ export interface ApplicationRecord {
     uploaded_at: string;
   }>;
   document_reviews?: Array<{
+    id: number;
+    doc_id: number | null;
     doc_type: string;
     status: string;
     notes: string | null;
