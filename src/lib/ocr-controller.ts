@@ -165,13 +165,13 @@ export class OcrAutofillController {
           this.setStatus(docType, {
             status: 'error',
             progress: 100,
-            message: 'Could not analyze this document',
+            message: 'Could not reach the document scanner',
           });
           this.validations[docType] = {
             valid: false,
             severity: 'error',
             issues: ['unreadable_text'],
-            message: 'Analysis failed — please re-upload a clearer photo',
+            message: 'The document scanner is busy or offline — please try again in a few minutes',
             confidence: 0,
             engine: 'none',
           };
@@ -227,8 +227,6 @@ export class OcrAutofillController {
 
     const total = images.length;
     let lastValidation: DocValidation | null = null;
-    let lastProperty: Partial<import('../types').PropertyInfo> = {};
-    let lastRequestor: string | null = null;
 
     for (let i = 0; i < total; i++) {
       if (this.generation.get(docType) !== gen) return;
@@ -294,8 +292,6 @@ export class OcrAutofillController {
           if (this.generation.get(docType) !== gen) return;
 
           lastValidation = analysis.validation;
-          lastProperty = analysis.propertyInfo;
-          lastRequestor = analysis.requestorName;
 
           // Merge structured fields into autofill result (fills empty slots)
           if (isAutofillDocType(docType)) {
@@ -364,21 +360,14 @@ export class OcrAutofillController {
       if (text.trim()) {
         if (isAutofillDocType(docType)) {
           extractFromDocText(docType, text, this.result);
-          lastProperty = { ...this.result.propertyInfo };
-          lastRequestor = this.result.requestorInfo.name || null;
         }
-        lastValidation = fallbackValidationFromText(
-          docType,
-          text,
-          lastProperty,
-          lastRequestor,
-        );
+        lastValidation = fallbackValidationFromText(text);
         this.validations[docType] = lastValidation;
         this.emitValidation();
         break;
       }
 
-      lastValidation = fallbackValidationFromText(docType, '', {}, null);
+      lastValidation = fallbackValidationFromText('');
       this.validations[docType] = lastValidation;
       this.emitValidation();
     }
