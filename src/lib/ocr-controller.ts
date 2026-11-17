@@ -300,10 +300,23 @@ export class OcrAutofillController {
               this.result.ran = true;
             }
             if (docType === 'valid_id' || docType === 'spa') {
-              if (analysis.requestorName && !this.result.requestorInfo.name) {
-                this.result.requestorInfo.name = analysis.requestorName;
+              const fill = analysis.requestorInfo;
+              if (fill.name && !this.result.requestorInfo.name) {
+                this.result.requestorInfo.name = fill.name;
                 this.result.sources.requestor = docType;
               }
+              if (fill.address && !this.result.requestorInfo.address) {
+                this.result.requestorInfo.address = fill.address;
+              }
+              if (fill.contactNumber && !this.result.requestorInfo.contactNumber) {
+                this.result.requestorInfo.contactNumber = fill.contactNumber;
+              }
+              if (fill.email && !this.result.requestorInfo.email) {
+                this.result.requestorInfo.email = fill.email;
+              }
+            }
+            if (analysis.ownerAddress && !this.result.ownerAddress) {
+              this.result.ownerAddress = analysis.ownerAddress;
             }
             if (Object.keys(analysis.propertyInfo).length > 0) {
               const merged = { ...this.result.propertyInfo };

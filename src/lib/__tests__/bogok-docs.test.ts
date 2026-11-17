@@ -204,7 +204,12 @@ describe.runIf(ENABLED)('BOGOK documents vs Transfer-of-Ownership (With Title)',
           if (p.barangay) parts.push(`barangay="${p.barangay}"`);
           if (p.taxDeclarations?.length) parts.push(`taxDeclarations=[${p.taxDeclarations.join('; ')}]`);
           if (p.streetName) parts.push(`streetName="${p.streetName}"`);
-          if (analysis.requestorName) parts.push(`requestorName="${analysis.requestorName}"`);
+          const r = analysis.requestorInfo;
+          if (r.name) parts.push(`requestorName="${r.name}"`);
+          if (r.address) parts.push(`requestorAddress="${r.address}"`);
+          if (r.contactNumber) parts.push(`requestorContact="${r.contactNumber}"`);
+          if (r.email) parts.push(`requestorEmail="${r.email}"`);
+          if (analysis.ownerAddress) parts.push(`ownerAddress="${analysis.ownerAddress}"`);
           fields = parts.join(' | ');
           textExcerpt = analysis.text.replace(/\s+/g, ' ').trim().slice(0, 300);
         } catch (e) {

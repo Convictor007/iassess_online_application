@@ -30,6 +30,8 @@ export interface OcrAutofillSources {
 export interface OcrAutofillResult {
   propertyInfo: Partial<PropertyInfo>;
   requestorInfo: Partial<RequestorInfo>;
+  /** Owner's address from a deed / TD — requestor fallback when the owner transacts. */
+  ownerAddress: string;
   sources: OcrAutofillSources;
   texts: Partial<Record<AutofillDocumentType, string>>;
   ran: boolean;
@@ -439,6 +441,40 @@ export function parseNameFromValidId(text: string): string | null {
   return findIdName(linesOf(text));
 }
 
+const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
+
+function findPhone(text: string): string | null {
+  const labeled = text.match(
+    /(?:mobile|cell(?:phone)?|contact|phone|tel(?:ephone)?\.?|cp)\s*(?:no\.?|number)?\s*[:\-]?\s*(\+?\d[\d\s().-]{6,18}\d)/i,
+  );
+  if (labeled) return labeled[1].replace(/\s+/g, ' ').trim();
+  const mobile = text.match(/(?:\+?63|0)9\d{9}/);
+  return mobile ? mobile[0] : null;
+}
+
+function findAddress(text: string): string | null {
+  const lines = linesOf(text);
+  for (const line of lines) {
+    const m = line.match(/^(?:current\s+|residential\s+|home\s+)*address\b\s*[:\-]?\s*(.+)$/i);
+    if (m?.[1] && m[1].trim().length >= 8) return m[1].replace(/\s+/g, ' ').trim();
+  }
+  const resident = text.match(/\bresident of\s+([^.;]{8,80})/i);
+  if (resident?.[1]) return resident[1].replace(/\s+/g, ' ').trim();
+  return null;
+}
+
+/** Pull address / mobile / email from OCR text (IDs, SPAs, deeds, tax declarations). */
+export function parseContactFromText(text: string): Partial<RequestorInfo> {
+  const out: Partial<RequestorInfo> = {};
+  const address = findAddress(text);
+  if (address) out.address = address;
+  const phone = findPhone(text);
+  if (phone) out.contactNumber = phone;
+  const email = text.match(EMAIL_RE);
+  if (email) out.email = email[0].trim();
+  return out;
+}
+
 function fileToBase64DataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -620,6 +656,11 @@ export function extractFromDocText(
         into.sources.property = docType;
       }
     }
+    const contact = parseContactFromText(text);
+    if (contact.address && !into.ownerAddress) {
+      into.ownerAddress = contact.address;
+      fieldsFilled++;
+    }
   }
 
   if (docType === 'spa') {
@@ -629,18 +670,40 @@ export function extractFromDocText(
       into.sources.requestor = 'spa';
       fieldsFilled++;
     }
+    fieldsFilled += fillRequestorContact(into, parseContactFromText(text));
   }
 
-  if (docType === 'valid_id' && !into.requestorInfo.name) {
-    const name = parseNameFromValidId(text);
-    if (name) {
-      into.requestorInfo.name = name;
-      into.sources.requestor = 'valid_id';
-      fieldsFilled++;
+  if (docType === 'valid_id') {
+    if (!into.requestorInfo.name) {
+      const name = parseNameFromValidId(text);
+      if (name) {
+        into.requestorInfo.name = name;
+        into.sources.requestor = 'valid_id';
+        fieldsFilled++;
+      }
     }
+    fieldsFilled += fillRequestorContact(into, parseContactFromText(text));
   }
 
   return { fieldsFilled };
+}
+
+/** Fill empty requestor contact fields (address / mobile / email) from OCR text. */
+function fillRequestorContact(into: OcrAutofillResult, fill: Partial<RequestorInfo>): number {
+  let n = 0;
+  if (fill.address && !into.requestorInfo.address) {
+    into.requestorInfo.address = fill.address;
+    n++;
+  }
+  if (fill.contactNumber && !into.requestorInfo.contactNumber) {
+    into.requestorInfo.contactNumber = fill.contactNumber;
+    n++;
+  }
+  if (fill.email && !into.requestorInfo.email) {
+    into.requestorInfo.email = fill.email;
+    n++;
+  }
+  return n;
 }
 
 /** Fill only empty / untouched property fields (user edits win). */
@@ -679,19 +742,38 @@ export function applyRequestorAutofill(
   return next;
 }
 
+function samePersonName(a: string, b: string): boolean {
+  const norm = (v: string) =>
+    v.toUpperCase().replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const x = norm(a);
+  const y = norm(b);
+  return x.length > 0 && x === y;
+}
+
 /**
  * Default requestor name to property owner when no SPA (or SPA had no name).
+ * The owner's address doubles as the requestor's when the owner is the transactor.
  */
 export function defaultRequestorFromOwner(
   current: RequestorInfo,
   propertyInfo: PropertyInfo,
   sources: OcrAutofillSources,
+  ownerAddress?: string | null,
 ): RequestorInfo {
-  if (current.name.trim()) return current;
-  if (sources.requestor === 'spa') return current;
   const owner = propertyInfo.ownerName.trim();
-  if (!owner || !looksLikePersonName(owner)) return current;
-  return { ...current, name: owner };
+  const ownerOk = Boolean(owner && looksLikePersonName(owner));
+  const next: RequestorInfo = { ...current };
+  if (!next.name.trim() && ownerOk && sources.requestor !== 'spa') next.name = owner;
+  if (
+    ownerAddress &&
+    ownerOk &&
+    !next.address.trim() &&
+    next.name.trim() &&
+    samePersonName(next.name, owner)
+  ) {
+    next.address = ownerAddress;
+  }
+  return next;
 }
 
 /** True if any tracked doc is still extracting. */
@@ -711,6 +793,7 @@ export function createEmptyOcrResult(): OcrAutofillResult {
   return {
     propertyInfo: {},
     requestorInfo: {},
+    ownerAddress: '',
     sources: { property: null, requestor: null },
     texts: {},
     ran: false,

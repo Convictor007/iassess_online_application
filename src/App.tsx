@@ -173,7 +173,7 @@ export default function App() {
           : ocr.sources;
       }
 
-      requestorInfo = defaultRequestorFromOwner(requestorInfo, propertyInfo, sources);
+      requestorInfo = defaultRequestorFromOwner(requestorInfo, propertyInfo, sources, ocr?.ownerAddress);
       return { ...d, propertyInfo, requestorInfo };
     });
     setOcrSources(
@@ -410,6 +410,7 @@ export default function App() {
                   d.requestorInfo,
                   d.propertyInfo,
                   ocrSources,
+                  ocrResultRef.current?.ownerAddress,
                 ),
               }));
               goNext('requestor_info');

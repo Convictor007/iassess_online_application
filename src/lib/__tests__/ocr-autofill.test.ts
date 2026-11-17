@@ -3,6 +3,7 @@ import {
   looksLikePersonName,
   parsePropertyFromText,
   parseNameFromValidId,
+  parseContactFromText,
 } from '../ocr-autofill';
 
 describe('looksLikePersonName', () => {
@@ -71,5 +72,39 @@ describe('parseNameFromValidId', () => {
 
   it('rejects garbage ID lines', () => {
     expect(parseNameFromValidId('CEFE BFKA W: FRS FPINAE')).toBeNull();
+  });
+});
+
+describe('parseContactFromText', () => {
+  it('reads address and mobile from a Postal-ID-like text', () => {
+    const out = parseContactFromText([
+      'POSTAL IDENTITY CARD',
+      'DARRYL JOHN CEDEÑO REYES',
+      'Address ZONE 7 SAN JOSE CS23027 NABUA CAMARINES SUR',
+      'Mobile 09171234567',
+    ].join('\n'));
+    expect(out.address).toBe('ZONE 7 SAN JOSE CS23027 NABUA CAMARINES SUR');
+    expect(out.contactNumber).toBe('09171234567');
+  });
+
+  it('reads the owner address from a tax declaration', () => {
+    const out = parseContactFromText(
+      'Owner: TENOSO, NERIE\nAddress: TAPAYAS, BALATAN, CAMARINES SUR',
+    );
+    expect(out.address).toBe('TAPAYAS, BALATAN, CAMARINES SUR');
+  });
+
+  it('reads a residence clause and an email', () => {
+    const out = parseContactFromText(
+      'I NERI TEÑOSO BELEN, resident of Barangay Tapayas, Balatan, Camarines Sur. Email juan.delacruz@example.com',
+    );
+    expect(out.address).toBe('Barangay Tapayas, Balatan, Camarines Sur');
+    expect(out.email).toBe('juan.delacruz@example.com');
+  });
+
+  it('does not mistake title numbers for a phone', () => {
+    const out = parseContactFromText('Katibayan ng Orihinal na Titulo Blg. 2024000680');
+    expect(out.contactNumber).toBeUndefined();
+    expect(out.address).toBeUndefined();
   });
 });

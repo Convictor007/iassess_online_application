@@ -58,7 +58,10 @@ export interface GeminiDocAnalysis {
   text: string;
   validation: DocValidation;
   propertyInfo: Partial<PropertyInfo>;
-  requestorName: string | null;
+  /** Person transacting — from valid_id / SPA. */
+  requestorInfo: Partial<RequestorInfo>;
+  /** Owner's address from deed / TD — requestor fallback when the owner transacts. */
+  ownerAddress: string | null;
 }
 
 export const EMPTY_VALIDATION: DocValidation = {
@@ -357,7 +360,11 @@ Missing names or numbers must NEVER make the photo fail.
 
 OPTIONAL EXTRACTION (only if clearly visible — leave blank instead of guessing):
 ownerName, taxDeclarationNumbers, titleNo, lotNo, blockNo, streetName, barangay,
-requestorName (name printed on a valid_id / attorney-in-fact on an SPA)
+ownerAddress (the owner's address shown on a deed / tax declaration),
+requestorName (name printed on a valid_id / attorney-in-fact on an SPA),
+requestorAddress (address printed on that ID / SPA),
+requestorContact (mobile or phone number printed on the ID / SPA),
+requestorEmail (email printed on the ID / SPA)
 
 Return ONLY JSON matching the schema.
 confidence is 0..1 (how readable the photo is). message is a short user-facing
@@ -377,7 +384,11 @@ JSON schema:
   "blockNo": string,
   "streetName": string,
   "barangay": string,
-  "requestorName": string
+  "ownerAddress": string,
+  "requestorName": string,
+  "requestorAddress": string,
+  "requestorContact": string,
+  "requestorEmail": string
 }
 
 issues must be a subset of: blurred, tilted_document, noisy_photo, incomplete_crop, unreadable_text, wrong_document_type, fake_or_suspicious_id, not_a_government_id, low_confidence`;
@@ -432,12 +443,33 @@ function normalizeIssues(raw: unknown): ValidationIssueCode[] {
   );
 }
 
-function sanitizePropertyFields(json: Record<string, unknown>, docType: DocumentType): {
+function looksLikeAddress(v: string): boolean {
+  const s = v.trim();
+  if (s.length < 8 || s.length > 160) return false;
+  if (!/[A-Za-z]/.test(s)) return false;
+  if (!/\s/.test(s)) return false;
+  if (/[{}<>]|:{2,}|https?:/i.test(s)) return false;
+  if (looksLikeEmail(s) || looksLikePhone(s)) return false;
+  return true;
+}
+
+function looksLikePhone(v: string): boolean {
+  const digits = v.replace(/\D/g, '');
+  return /^[+\d][\d\s().-]*$/.test(v.trim()) && digits.length >= 7 && digits.length <= 15;
+}
+
+function looksLikeEmail(v: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+}
+
+function sanitizeExtractedFields(json: Record<string, unknown>, docType: DocumentType): {
   propertyInfo: Partial<PropertyInfo>;
-  requestorName: string | null;
+  requestorInfo: Partial<RequestorInfo>;
+  ownerAddress: string | null;
 } {
   const propertyInfo: Partial<PropertyInfo> = {};
-  let requestorName: string | null = null;
+  const requestorInfo: Partial<RequestorInfo> = {};
+  let ownerAddress: string | null = null;
 
   const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -469,14 +501,26 @@ function sanitizePropertyFields(json: Record<string, unknown>, docType: Document
       const match = BARANGAYS.find((b) => b.toUpperCase() === brgy.toUpperCase());
       if (match) propertyInfo.barangay = match;
     }
+
+    const oAddr = str(json.ownerAddress);
+    if (looksLikeAddress(oAddr)) ownerAddress = oAddr;
   }
 
   if (REQUESTOR_DOCS.includes(docType)) {
     const name = str(json.requestorName);
-    if (name && looksLikePersonName(name)) requestorName = name;
+    if (name && looksLikePersonName(name)) requestorInfo.name = name;
+
+    const addr = str(json.requestorAddress);
+    if (looksLikeAddress(addr)) requestorInfo.address = addr;
+
+    const contact = str(json.requestorContact);
+    if (looksLikePhone(contact)) requestorInfo.contactNumber = contact;
+
+    const email = str(json.requestorEmail);
+    if (looksLikeEmail(email)) requestorInfo.email = email;
   }
 
-  return { propertyInfo, requestorName };
+  return { propertyInfo, requestorInfo, ownerAddress };
 }
 
 /**
@@ -610,7 +654,7 @@ export async function analyzeWithGemini(
             ? 'Document looks acceptable'
             : 'Document needs to be re-uploaded';
 
-      const { propertyInfo, requestorName } = sanitizePropertyFields(parsed, docType);
+      const { propertyInfo, requestorInfo, ownerAddress } = sanitizeExtractedFields(parsed, docType);
       const rawText = typeof parsed.text === 'string' ? parsed.text : '';
 
       // Verdict is photo-quality only: extracted fields never affect validity.
@@ -630,7 +674,8 @@ export async function analyzeWithGemini(
         text: rawText,
         validation,
         propertyInfo,
-        requestorName,
+        requestorInfo,
+        ownerAddress,
       };
     } catch (err) {
       fail(err instanceof Error ? err.message : String(err));
