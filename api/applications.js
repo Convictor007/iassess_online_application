@@ -12,7 +12,8 @@ import { getCertificationFee } from "./_lib/constants.mjs";
 
 const MOBILE_API_KEY = process.env.MOBILE_API_KEY;
 
-async function notifyAssessorsOfOnlineApplication({ applicationId, referenceNumber }) {
+/** Server-to-server staff push for any portal submit (walk_in + online). */
+async function notifyAssessorsOfNewApplication({ applicationId, referenceNumber }) {
   const mobileApiUrl = process.env.IASSESS_MOBILE_API_URL?.trim().replace(/\/+$/, "");
   const sharedSecret = process.env.PUSH_NOTIFICATION_SHARED_SECRET?.trim();
   if (!mobileApiUrl || !sharedSecret) {
@@ -25,7 +26,8 @@ async function notifyAssessorsOfOnlineApplication({ applicationId, referenceNumb
 
   const endpoint = `${mobileApiUrl}/api/notifications/new-application`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  // EAS Hosting can be slow on cold start — allow 20s before abort
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -146,12 +148,11 @@ export default async function handler(req, res) {
         })),
       });
 
-      if (submissionMethodValue === "online") {
-        await notifyAssessorsOfOnlineApplication({
-          applicationId: Number(trnId),
-          referenceNumber,
-        });
-      }
+      // Always notify staff on portal submits (walk_in + online + certification).
+      await notifyAssessorsOfNewApplication({
+        applicationId: Number(trnId),
+        referenceNumber,
+      });
 
       // Server-side confirmation email — client fire-and-forget can fail silently.
       let emailSent = false;
